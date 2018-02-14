@@ -7,7 +7,7 @@ A lightweight, dependency-free, extensible text editor.
 I tried to find a great, open-source rich text editor that didn't require other libraries (like jQuery), but couldn't find anything interesting enough. Since the entire CMS is almost dependency-free, I figured the only few dependencies should be dependency-free as well. 
 
 ## Compiling
-Lilium Text will use [Babel](https://babeljs.io/) to compile ES6 files into "browser Javascript". The compilation method will be documented here, but it should look like `npm run build`. Compiled files will be located under `/build`, and will be part of each `master` merge. 
+Lilium Text uses [Babel](https://babeljs.io/) to compile ES6 files into "browser Javascript". Simply install all required packages once using `npm install`, then run `npm run build`. Compiled files will be located under `/build`.
 
 ## Branches
 For now, I'll be pushing to master until we have a working build. I will then switch to a dev branch and will accept pull requests. 

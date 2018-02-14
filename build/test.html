@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link href="fontawesome-all.min.css" rel="stylesheet">
+        <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+ 
+        <style>
+            .liliumtext-editor,
+            .liliumtext-code {
+                border: 1px solid #DDD;
+                padding: 10px;
+                border-top: none;
+                outline : none;
+
+                overflow-y : auto;
+            }
+
+            .liliumtext-editor script {
+                display: block;
+                font-size : 0;
+            }
+
+            .liliumtext-editor script::before {
+                content: 'Javascript';
+                font-size: 14px;
+                display: block;
+                border: 1px solid #DDD;
+                padding: 15px 0px;
+                margin-bottom: 12px;
+                border-radius: 8px;
+                background: #F9F9F9;
+                text-transform: uppercase;
+                text-align: center;
+            }
+
+            .liliumtext-editor.invisible {
+                display: none;
+            }
+
+            .liliumtext-editor p {
+                margin-top: 0;
+            }
+
+            .liliumtext-topbar {
+                border: 1px solid #DDD;
+                background : #F8F8F8;
+                padding: 3px;
+            }
+
+            .liliumtext-commandset {
+                display: inline-block;
+                margin: 3px;
+                border: 1px solid #DDD;
+                border-radius: 3px;
+                background: #FFF;
+            }
+
+            .liliumtext-topbar-command {
+                display: inline-block;
+                height: 24px;
+                width: 24px;
+                text-align: center;
+                padding-top: 6px;
+                color : #333;
+            }
+
+            .liliumtext-topbar-command.liliumtext-command-withtext {
+                width: auto;
+                padding: 6px 6px 0px;
+            }
+
+            .liliumtext-command-text {
+                display: inline-block;
+                vertical-align: middle;
+                margin-left: 5px;
+                font-size: 15px;
+            }
+
+            .liliumtext-topbar-command {
+                display: inline-block;
+                padding-top: 6px;
+                text-align: center;
+                vertical-align: middle;
+                width: 28px;
+                height: 22px;
+                cursor: pointer;
+                transition: all 0.1s;
+            }
+
+            .liliumtext-topbar-command:hover {
+                transform: scale(1.1);
+            }
+
+            .liliumtext-code {
+                display: none;
+                width: 100%;
+                resize: none;
+                box-sizing: border-box;
+                font-size: monospace;
+
+                background: #333;
+                color: #DDD;
+            }
+
+            .liliumtext-editor {
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            .liliumtext-code.visible {
+                display: block;
+            }
+        </style>       
+        <title>Lilium Text - Test page</title>
+    </head>
+    <body>
+        <h1>Lilium Text - Test page</h1>
+        <div id="liliumtext">
+
+        </div>
+
+        <script src="liliumtext.js"></script>
+        <script>
+const content = "<h1>This is awesome.</h1><p>Testing with <u>cool</u> content. <b>Lorem Ipsum</b>? Nah. I rather write real stuff to fill up the small form I created using editable content. Yep! That's pretty neat! Right?&nbsp;</p><h2>Right...?</h2><script>alert('No XSS')</scr"+"ipt><p><b>Here,</b> we have fun. There is Javascript above this paragraph, but it won't get executed. You can still see it though.</p>";
+            const editor = new LiliumText("liliumtext", { 
+                dev : true,
+                width : "640px",
+                content : content
+            });
+        </script>
+
+    </body>
+</html>
