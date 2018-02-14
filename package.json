@@ -1,0 +1,22 @@
+{
+  "name": "lilium-text",
+  "version": "1.0.0",
+  "description": "Web rich text editor. Not ready to be used at all.",
+  "main": "testserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rykdesjardins/lilium-text.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rykdesjardins/lilium-text/issues"
+  },
+  "homepage": "https://github.com/rykdesjardins/lilium-text#readme",
+  "devDependencies": {
+    "express": "^4.16.2"
+  }
+}
