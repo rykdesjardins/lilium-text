@@ -82,9 +82,9 @@ const init = thatEditor => {
     console.log('Initialized editor with id ' + thatEditor.id);
 };
 
-const editor1 = new LiliumText('myeditor1', { hooks : { init : thatEditor }});
-const editor2 = new LiliumText('myeditor2', { hooks : { init : thatEditor }});
-const editor3 = new LiliumText('myeditor3', { hooks : { init : thatEditor }});
+const editor1 = new LiliumText('myeditor1', { hooks : { init }});
+const editor2 = new LiliumText('myeditor2', { hooks : { init }});
+const editor3 = new LiliumText('myeditor3', { hooks : { init }});
 
 // The previous script should output : 
 //  > Initialized editor with id myeditor1 
