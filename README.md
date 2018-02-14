@@ -113,7 +113,7 @@ const loadFromServer = () => {
 
 There exist two hooks related to the `content` property. It is possible to hook on both `get` and `set` evemts. That way, a plugin can be created to modify the content the moment it is set. An extra validation could be made to remove all `<script>` tags for instance.
 ```javascript
-editor.on('set', setArgs => {
+const removeScriptTags = (thatEditor, setArgs) => {
     // Parse markup
     const tempDOM = document.createElement('div');
     tempDOM.innerHTML = setArgs.markup;
@@ -124,6 +124,8 @@ editor.on('set', setArgs => {
     // Set final markup
     setArgs.markup = tempDOM.innerHTML;
 });
+
+editor.on('set', removeScriptTags);
 ```
 
 
