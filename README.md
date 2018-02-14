@@ -42,7 +42,7 @@ Using the previous code example, let `editor` be an instance of `LiliumText`. It
 // Hook during initialization
 const editor = new LiliumText('myeditor', {
     hooks : {
-        init : {
+        init : thatEditor => {
             // Idea : register new commands in the top bar
         }
     }
@@ -68,6 +68,29 @@ editor.bind('code', (editor, isCodeView) => {
 | render     | Editor rendered                              |                               |
 | set        | The content setter was called                | Object `{ markup }`           |
 | get        | The content getter was called                | Object `{ markup }`           |
+
+Some events will carry arguments as detailed in the "Args" column. When defining a callback, it is important to remember that the first argument is **always** the editor firing the event. If event arguments exist, they will appear as the second argument of the callback. 
+```javascript
+editor.bind('someEvent', (thatEvent, eventArgs) => {
+    editor === thatEvent // true
+});
+```
+
+This can be useful if you create multiple editors calling the same function. 
+```javascript
+const init = thatEditor => {
+    console.log('Initialized editor with id ' + thatEditor.id);
+};
+
+const editor1 = new LiliumText('myeditor1', { hooks : { init : thatEditor }});
+const editor2 = new LiliumText('myeditor2', { hooks : { init : thatEditor }});
+const editor3 = new LiliumText('myeditor3', { hooks : { init : thatEditor }});
+
+// The previous script should output : 
+//  > Initialized editor with id myeditor1 
+//  > Initialized editor with id myeditor2
+//  > Initialized editor with id myeditor3
+```
 
 ## Adding commands
 It is possible to add custom commands in the top bar. This can be done by calling the `addCommand` instance method, and by passing a new `LiliumTextCustomCommand` object. The following example takes for granted that the programmer uses FontAwesome. 
