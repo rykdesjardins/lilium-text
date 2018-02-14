@@ -1,6 +1,8 @@
 # Lilium Text
 A lightweight, dependency-free, extensible text editor. 
 
+![First Screenshot](https://erikdesjardins.com/static/git/liliumtext-1.jpg)
+
 ## About the project
 [Narcity Media](https://github.com/narcitymedia/) needed a new Text Editor to replace to current one, and I figured since we don't have anything open source yet (including our *AMAZING* CMS), this would be a good start. The editor doesn't do much yet, and was created overnight. 
 
