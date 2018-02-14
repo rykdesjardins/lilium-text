@@ -153,4 +153,11 @@ const removeScriptTags = (thatEditor, setArgs) => {
 editor.on('set', removeScriptTags);
 ```
 
+## Insert content
+The `insert` instance method can be used in order to insert an element in the editor. It accepts **one parameter** that is the element to be inserted. If the cursor is not set, the element will be inserted at the top of the content box. It will otherwise be inserted after the cursor. The cursor will then move after the inserted element so that the method can be used multiple times. 
+```javascript
+const textNode = document.createTextNode('Hello, World!');
+editor.insert(textNode);
+```
+
 

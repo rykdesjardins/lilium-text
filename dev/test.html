@@ -3,9 +3,14 @@
     <head>
         <meta charset="utf-8">
         <link href="fontawesome-all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Ovo" rel="stylesheet">
         <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
  
         <style>
+            body {
+                font-family : 'Ovo', serif;
+            }
+
             .liliumtext-editor,
             .liliumtext-code {
                 border: 1px solid #DDD;
@@ -32,6 +37,7 @@
                 background: #F9F9F9;
                 text-transform: uppercase;
                 text-align: center;
+                font-family : Helvetica, sans-serif;
             }
 
             .liliumtext-editor.invisible {
@@ -40,6 +46,12 @@
 
             .liliumtext-editor p {
                 margin-top: 0;
+                line-height: 25px;
+            }
+
+            .liliumtext-editor h1,
+            .liliumtext-editor h2 {
+                font-weight: normal;
             }
 
             .liliumtext-topbar {
@@ -101,10 +113,6 @@
 
                 background: #333;
                 color: #DDD;
-            }
-
-            .liliumtext-editor {
-                font-family: Helvetica, Arial, sans-serif;
             }
 
             .liliumtext-code.visible {

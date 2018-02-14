@@ -156,11 +156,55 @@ class LiliumText {
         document.dispatchEvent(new CustomEvent("liliumTextDestroyed", { detail : this }));
     }
 
+    isRangeInEditor(range) {
+        if (range) {
+            let par = range.endContainer;
+            while (par.parentElement) {
+                if (par == this.contentel) {
+                    return true;
+                }
+
+                par = par.parentElement;
+            }
+        }
+
+        return false;
+    }
+
+    insert(element) {
+        let range = this._tempRange || this._makeRange();
+        if (!this.isRangeInEditor(range)) {
+            this.contentel.focus();
+            range = this._makeRange();
+        }
+
+        range.insertNode(element);
+        range.setStartAfter(element);
+
+        this._tempSelection.removeAllRanges();
+        this._tempSelection.addRange(range);
+        this._tempRange = range;
+    }
+
     _focused() {
         const eventresult = this.fire('focus');
         if (!eventresult || !eventresult.includes(false)) {
             document.execCommand("defaultParagraphSeparator", false, this.settings.breaktag);
         }
+    }
+
+    _makeRange() {
+        this._tempSelection = window.getSelection();
+
+        if (this._tempSelection.focusNode) {
+            this._tempRange = this._tempSelection.getRangeAt(0).cloneRange();
+        }
+
+        return this._tempRange;
+    }
+
+    _blurred() {
+        this._makeRange();
     }
 
     _pasted(e) {
@@ -218,6 +262,7 @@ class LiliumText {
 
         this.contentel.addEventListener('paste', this.settings.onpaste || this._pasted.bind(this));
         this.contentel.addEventListener('focus', this._focused.bind(this));
+        this.contentel.addEventListener('blur',  this._blurred.bind(this));
 
         this.fire('init');
         this.log('Initialized object');
