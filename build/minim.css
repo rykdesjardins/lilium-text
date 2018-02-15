@@ -1,24 +1,24 @@
-.liliumtext .theme-minim .liliumtext-editor,
-.liliumtext .theme-minim .liliumtext-code {
+.liliumtext.theme-minim .liliumtext-editor,
+.liliumtext.theme-minim .liliumtext-code {
   border: 1px solid #DDD;
   padding: 10px;
   border-top: none;
   outline: none;
   overflow-y: auto;
 }
-.liliumtext .theme-minim .liliumtext-editor script {
+.liliumtext.theme-minim .liliumtext-editor script {
   display: block;
   font-size: 0;
 }
-.liliumtext .theme-minim .liliumtext-editor p {
+.liliumtext.theme-minim .liliumtext-editor p {
   margin-top: 0;
   line-height: 25px;
 }
-.liliumtext .theme-minim .liliumtext-editor h1,
-.liliumtext .theme-minim .liliumtext-editor h2 {
+.liliumtext.theme-minim .liliumtext-editor h1,
+.liliumtext.theme-minim .liliumtext-editor h2 {
   font-weight: normal;
 }
-.liliumtext .theme-minim .liliumtext-editor script::before {
+.liliumtext.theme-minim .liliumtext-editor script::before {
   content: 'Javascript';
   font-size: 14px;
   display: block;
@@ -31,22 +31,22 @@
   text-align: center;
   font-family: Helvetica, sans-serif;
 }
-.liliumtext .theme-minim .liliumtext-editor.invisible {
+.liliumtext.theme-minim .liliumtext-editor.invisible {
   display: none;
 }
-.liliumtext .theme-minim .liliumtext-topbar {
+.liliumtext.theme-minim .liliumtext-topbar {
   border: 1px solid #DDD;
   background: #F8F8F8;
   padding: 3px;
 }
-.liliumtext .theme-minim .liliumtext-commandset {
+.liliumtext.theme-minim .liliumtext-commandset {
   display: inline-block;
   margin: 3px;
   border: 1px solid #DDD;
   border-radius: 3px;
   background: #FFF;
 }
-.liliumtext .theme-minim .liliumtext-topbar-command {
+.liliumtext.theme-minim .liliumtext-topbar-command {
   display: inline-block;
   padding-top: 6px;
   text-align: center;
@@ -57,20 +57,20 @@
   color: #333;
   transition: all 0.1s;
 }
-.liliumtext .theme-minim .liliumtext-topbar-command.liliumtext-command-withtext {
+.liliumtext.theme-minim .liliumtext-topbar-command.liliumtext-command-withtext {
   width: auto;
   padding: 6px 6px 0px;
 }
-.liliumtext .theme-minim .liliumtext-topbar-command:hover {
+.liliumtext.theme-minim .liliumtext-topbar-command:hover {
   transform: scale(1.1);
 }
-.liliumtext .theme-minim .liliumtext-command-text {
+.liliumtext.theme-minim .liliumtext-command-text {
   display: inline-block;
   vertical-align: middle;
   margin-left: 5px;
   font-size: 15px;
 }
-.liliumtext .theme-minim .liliumtext-code {
+.liliumtext.theme-minim .liliumtext-code {
   display: none;
   width: 100%;
   resize: none;
@@ -79,6 +79,6 @@
   background: #333;
   color: #DDD;
 }
-.liliumtext .theme-minim .liliumtext-code.visible {
+.liliumtext.theme-minim .liliumtext-code.visible {
   display: block;
 }
