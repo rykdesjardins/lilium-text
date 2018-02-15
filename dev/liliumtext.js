@@ -156,6 +156,14 @@ class LiliumText {
         document.dispatchEvent(new CustomEvent("liliumTextDestroyed", { detail : this }));
     }
 
+    lock() {
+        this.contentel.removeAttribute('contenteditable');
+    }
+
+    unlock() {
+        this.contentel.contentEditable = true;
+    }
+
     isRangeInEditor(range) {
         if (range) {
             let par = range.endContainer;
@@ -269,10 +277,23 @@ class LiliumText {
         this.initialized = true;
     }
 
-    addCommand(command, setIndex = this.commandsets.length - 1) {
+    createCommandSet(set = [], index, rerender = true) {
+        if (index === -1) {
+            this.commandsets = [set, ...this.commandsets];
+        } else if (index < this.commandsets.length) {
+            this.commandsets = [...this.commandsets.slice(0, index), set, ...this.commandsets.slice(index)];
+        } else {
+            this.commandsets.push(set);
+        }
+
+        rerender && this.render();
+    }
+
+    addCommand(command, setIndex = this.commandsets.length - 1, rerender = true) {
         let set = this.commandsets[setIndex];
         set ? set.push(command) : this.commandsets.push([command]);
-        this.render();
+        
+        rerender && this.render();
     }
 
     bind(eventname, callback) {
