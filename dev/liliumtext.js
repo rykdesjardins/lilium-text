@@ -67,6 +67,7 @@ class LiliumText {
             removepastedstyles : true,
             dev : false,
             hooks : {},
+            theme : "minim",
             width : "auto",
             height : "420px",
             breaktag : "p",
@@ -128,6 +129,8 @@ class LiliumText {
         this.log('Firing document event');
         document.dispatchEvent(new CustomEvent("liliumTextCreated", { detail : this }));
 
+        this.wrapperel.classList.add('liliumtext');
+        this.wrapperel.classList.add('theme-' + this.settings.theme);
         Object.keys(this.settings.hooks).forEach(ev => {
             this.bind(ev, this.settings.hooks[ev]);
         });
@@ -378,3 +381,7 @@ class LiliumText {
     }
 };
 LiliumText.instances = {};
+
+if (typeof module !== "undefined") {
+    module.exports = { LiliumText, LiliumTextCustomCommand, LiliumTextWebCommand, LiliumTextCommand }
+}
