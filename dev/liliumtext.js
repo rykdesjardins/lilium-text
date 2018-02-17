@@ -1,6 +1,7 @@
 class LiliumTextCommand {
     execute() { throw new Error("execute() method was not overridden in child class.") }
     make(editor) { 
+        this.editor = editor;
         const el = document.createElement("i");
         el.className = "liliumtext-topbar-command liliumtext-topbar-command-" + this.webName + " " + (this.cssClass || "liliumtext-topbar-noicon");
         el.dataset.command = this.webName;
@@ -21,6 +22,32 @@ class LiliumTextCommand {
         });
 
         return el;
+    }
+
+    createSelectionContext(sel) {
+        let elem = sel.focusNode;
+        const context = [];
+
+        do {
+            context.push({ type : elem.nodeName, element : elem });
+            elem = elem.parentElement;
+        } while (elem != this.editor.contentel && elem);
+
+        return context;
+    }
+
+    elevateToNodeType(sel, nodename) {
+        nodename = nodename.toUpperCase();
+        let par = sel.focusNode.parentElement;
+        while (par.nodeName != nodename) {
+            par = par.parentElement;
+
+            if (par == editor.contentel || !par) {
+                return false;
+            }
+        }
+
+        return par;
     }
 
     selectWord(sel) {
@@ -65,9 +92,44 @@ class LiliumTextWebCommand extends LiliumTextCommand {
     }
 
     correctSelection() {
+        /**
+         * New logic to implement -
+         *  Since browsers don't behave the same way when execCommand is fired, it'd be best to use it as little as possible. 
+         *  The TextWebCommand logic would be the following : 
+         *
+         *
+         *
+         *  If selection is Caret
+         *      Find if caret is inside command tag
+         *      Then : 
+         *          insertBefore everything and remove
+         *      Else : 
+         *          Create element, insert before, move selection inside new node
+         *  Else if selection is Range
+         *      Find if command tag is within range
+         *      Then :  
+         *          Move what's outside of command tag inside either before or after
+         *      Else, if entire range is within command tag :
+         *          If command tag is span
+         *          Then :
+         *              Unwrap selection, duplicate first node, wrap remaining in cloned node
+         *          Else, if command tag is block :
+         *              insertBefore entire tag content, remove tag
+         *     Else:
+         *          Create new node, insert before selection, move selection inside new node
+         *      
+         *
+         *
+         * This will also make it possible to select what node name we want for bold and italic (b, strong, i, em) 
+         * through the options.
+         **/
+
         const selection = window.getSelection();
         if (selection.type == "Caret") {
+            const context = this.createSelectionContext(selection);
             const parentNodeType = selection.focusNode.parentElement.nodeName.toLowerCase();
+
+
             if (["strong", "b", "i", "em", "u", "a"].includes(parentNodeType)) {
                 this.selectParent(selection);
             } else {
@@ -122,7 +184,7 @@ class LiliumText {
     static createDefaultCommands(editor) {
         return [
             [
-                new LiliumTextWebCommand("bold", undefined, "far fa-bold"), 
+                new LiliumTextWebCommand("bo<F5>ld", undefined, "far fa-bold"), 
                 new LiliumTextWebCommand("italic", undefined, "far fa-italic"), 
                 new LiliumTextWebCommand("underline", undefined, "far fa-underline"),  
                 new LiliumTextWebCommand("strikethrough", undefined, "far fa-strikethrough"),
