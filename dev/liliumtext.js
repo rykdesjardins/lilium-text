@@ -22,6 +22,35 @@ class LiliumTextCommand {
 
         return el;
     }
+
+    selectWord(sel) {
+        const range = document.createRange();
+        range.setStart(sel.anchorNode, sel.anchorOffset);
+        range.setEnd(sel.focusNode, sel.focusOffset);
+        
+        const backwards = range.collapsed;
+        range.detach();
+
+        const endNode = sel.focusNode
+        const endOffset = sel.focusOffset;
+        sel.collapse(sel.anchorNode, sel.anchorOffset);
+
+        const direction = backwards ? ['backward', 'forward'] : ['forward', 'backward'];
+
+        sel.modify("move", direction[0], "character");
+        sel.modify("move", direction[1], "word");
+        sel.extend(endNode, endOffset);
+        sel.modify("extend", direction[1], "character");
+        sel.modify("extend", direction[0], "word");
+    }
+
+    selectParent(sel) {
+        const range = document.createRange();
+        range.selectNode(sel.focusNode.parentNode);
+
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+    }
 }
 
 class LiliumTextWebCommand extends LiliumTextCommand {
@@ -35,7 +64,21 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         this.text = text;
     }
 
+    correctSelection() {
+        const selection = window.getSelection();
+        if (selection.type == "Caret") {
+            const parentNodeType = selection.focusNode.parentElement.nodeName.toLowerCase();
+            if (["strong", "b", "i", "em", "u", "a"].includes(parentNodeType)) {
+                this.selectParent(selection);
+            } else {
+                this.selectWord(selection);
+            }
+        }
+    }
+
     execute(ev) {
+        this.correctSelection();
+
         document.execCommand(this.webName, false, this.param);
         ev.stopPropagation();
         ev.preventDefault();
