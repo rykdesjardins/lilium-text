@@ -29,7 +29,7 @@ class LiliumTextCommand {
         const context = [];
 
         do {
-            context.push({ type : elem.nodeName, element : elem });
+            context.push({ type : elem.nodeName.toLowerCase().replace('#', ''), element : elem });
             elem = elem.parentElement;
         } while (elem != this.editor.contentel && elem);
 
@@ -71,9 +71,17 @@ class LiliumTextCommand {
         sel.modify("extend", direction[0], "word");
     }
 
-    selectParent(sel) {
+    selectParent(sel, par) {
         const range = document.createRange();
-        range.selectNode(sel.focusNode.parentNode);
+        range.selectNode(par || sel.focusNode.parentNode);
+
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+    }
+
+    wrap(sel, elem) {
+        const range = sel.getRangeAt(0).cloneRange();
+        range.surroundContents(elem);
 
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(range);
@@ -124,11 +132,11 @@ class LiliumTextWebCommand extends LiliumTextCommand {
          * through the options.
          **/
 
+        // Command types : text, removeFormat, block, exec
         const selection = window.getSelection();
         if (selection.type == "Caret") {
             const context = this.createSelectionContext(selection);
             const parentNodeType = selection.focusNode.parentElement.nodeName.toLowerCase();
-
 
             if (["strong", "b", "i", "em", "u", "a"].includes(parentNodeType)) {
                 this.selectParent(selection);
@@ -138,10 +146,50 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         }
     }
 
-    execute(ev) {
-        this.correctSelection();
+    executeText() {
+        const selection = window.getSelection();
+        const context = this.createSelectionContext(selection);
+        const nodetype = this.param;
 
-        document.execCommand(this.webName, false, this.param);
+        if (selection.type == "Caret") {
+            let maybeCtxElem = context.find(x => x.type == nodetype);
+            if (maybeCtxElem) {
+                const el = maybeCtxElem.element;
+                const par = el.parentElement;
+                while(el.firstChild) par.insertBefore(el.firstChild, el);
+                el.remove();
+            } else {
+                this.selectWord(selection);
+                this.wrap(selection, document.createElement(nodetype));
+            }
+        } 
+
+        
+    }
+
+    executeExec() {
+
+    }
+
+    executeBlock() {
+
+    }
+
+    executeRemoveFormat() {
+
+    }
+
+    execute(ev) {
+        switch (this.webName) {
+            case "text":            this.executeText();         break;
+            case "exec":            this.executeExec();         break;
+            case "block":           this.executeBlock();        break;
+            case "removeFormat":    this.executeRemoveFormat(); break;
+
+            // Default is noOp, but display warning for easier debugging
+            default:                this.editor.log(`Warning : Tried to execute command with unknown webName [${this.webName}]`);
+        }
+
         ev.stopPropagation();
         ev.preventDefault();
         return false;
@@ -174,8 +222,14 @@ class LiliumText {
             hooks : {},
             theme : "minim",
             width : "auto",
+            boldnode : "strong",
+            italicnode : "em",
+            underlinenode : "u",
+            strikenode : "strike",
             height : "420px",
             breaktag : "p",
+            blockelements : ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "ol", "ul", "article", "dd", "dl", "dt", "figure", "header", "hr", "main", "section", "table", "tfoot"],
+            inlineelements : ["a", "b", "big", "code", "em", "i", "img", "small", "span", "strong", "sub", "sup", "time", "var"],
             content : "",
             urldetection : /^((https?):\/)\/?([^:\/\s]+)((\/\w+)*\/?)([\w\-\.])+/i
         }
@@ -184,24 +238,24 @@ class LiliumText {
     static createDefaultCommands(editor) {
         return [
             [
-                new LiliumTextWebCommand("bo<F5>ld", undefined, "far fa-bold"), 
-                new LiliumTextWebCommand("italic", undefined, "far fa-italic"), 
-                new LiliumTextWebCommand("underline", undefined, "far fa-underline"),  
-                new LiliumTextWebCommand("strikethrough", undefined, "far fa-strikethrough"),
+                new LiliumTextWebCommand('text', editor.settings.boldnode || "strong", "far fa-bold"), 
+                new LiliumTextWebCommand('text', editor.settings.italicnode || "em", "far fa-italic"), 
+                new LiliumTextWebCommand('text', editor.settings.underlinenode || "u", "far fa-underline"),  
+                new LiliumTextWebCommand('text', editor.settings.strikenode || "strike", "far fa-strikethrough"),
                 new LiliumTextWebCommand('removeFormat', undefined, "far fa-eraser")
             ], [
-                new LiliumTextWebCommand("undo", undefined, "far fa-undo"), 
-                new LiliumTextWebCommand("redo", undefined, "far fa-redo")
+                new LiliumTextWebCommand('exec', "undo", "far fa-undo"), 
+                new LiliumTextWebCommand('exec', "redo", "far fa-redo")
             ], [
-                new LiliumTextWebCommand('formatBlock', 'p', 'far fa-paragraph'), 
-                new LiliumTextWebCommand("formatBlock", "h1", "far fa-h1"), 
-                new LiliumTextWebCommand("formatBlock", "h2", "far fa-h2"), 
-                new LiliumTextWebCommand("formatBlock", "h3", "far fa-h3"),
-                new LiliumTextWebCommand("formatBlock", "blockquote", "far fa-quote-right"),
+                new LiliumTextWebCommand('block', editor.settings.breaktag || 'p', 'far fa-paragraph'), 
+                new LiliumTextWebCommand("block", "h1", "far fa-h1"), 
+                new LiliumTextWebCommand("block", "h2", "far fa-h2"), 
+                new LiliumTextWebCommand("block", "h3", "far fa-h3"),
+                new LiliumTextWebCommand("block", "blockquote", "far fa-quote-right"),
             ], [
-                new LiliumTextWebCommand("insertOrderedList", undefined, "far fa-list-ol"),  
-                new LiliumTextWebCommand("insertUnorderedList", undefined, "far fa-list-ul"), 
-                new LiliumTextWebCommand('unlink', false, 'far fa-unlink')
+                new LiliumTextWebCommand('exec', "insertOrderedList",   "far fa-list-ol"),  
+                new LiliumTextWebCommand('exec', "insertUnorderedList", "far fa-list-ul"), 
+                new LiliumTextWebCommand('exec', 'unlink', 'far fa-unlink')
             ], [
                 new LiliumTextCustomCommand("code", editor.toggleCode.bind(editor), "far fa-code")
             ]
