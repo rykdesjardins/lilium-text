@@ -36,53 +36,6 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         this.text = text;
     }
 
-    correctSelection() {
-        /**
-         * New logic to implement -
-         *  Since browsers don't behave the same way when execCommand is fired, it'd be best to use it as little as possible. 
-         *  The TextWebCommand logic would be the following : 
-         *
-         *
-         *
-         *  If selection is Caret
-         *      Find if caret is inside command tag
-         *      Then : 
-         *          insertBefore everything and remove
-         *      Else : 
-         *          Create element, insert before, move selection inside new node
-         *  Else if selection is Range
-         *      Find if command tag is within range
-         *      Then :  
-         *          Move what's outside of command tag inside either before or after
-         *      Else, if entire range is within command tag :
-         *          If command tag is span
-         *          Then :
-         *              Unwrap selection, duplicate first node, wrap remaining in cloned node
-         *          Else, if command tag is block :
-         *              insertBefore entire tag content, remove tag
-         *     Else:
-         *          Create new node, insert before selection, move selection inside new node
-         *      
-         *
-         *
-         * This will also make it possible to select what node name we want for bold and italic (b, strong, i, em) 
-         * through the options.
-         **/
-
-        // Command types : text, removeFormat, block, exec
-        const selection = window.getSelection();
-        if (selection.type == "Caret") {
-            const context = this.createSelectionContext(selection);
-            const parentNodeType = selection.focusNode.parentElement.nodeName.toLowerCase();
-
-            if (["strong", "b", "i", "em", "u", "a"].includes(parentNodeType)) {
-                this.selectParent(selection);
-            } else {
-                this.selectWord(selection);
-            }
-        }
-    }
-
     executeText() {
         const selection = this.editor.restoreSelection();
         const nodetype = this.param;
@@ -117,7 +70,24 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             } else {
                 this.editor.log("Long logic with range using node type " + nodetype);
                 // This is the most fun part
-
+                // So we're dealing with a selection where the start and end are inside different elements (partial selection).
+                // Here's what's going to happen.
+                //
+                //  IF left postion XOR right portion has a parent with the nodeName == nodetype :
+                //      Since they don't have the same parent, we'll extend the parent node to wrap the entire selection.
+                //      This will require either prepending or appending content from outside the wrapper node to inside.
+                //
+                //  ELSE IF both left AND right portions have a parent with the nodeName == nodetype :
+                //      We need to unwrap both of them while keeping the left padding and right padding inside previous tag
+                //      If padding tags are empty, remove them.
+                //
+                //  ELSE
+                //      We need to wrap everything inside a brand new <nodetype> element.
+                //      Create the element, push the entire content inside the new element.
+                //      Insert element before selection, remove trailing tags if any
+                //
+                // Fun! :D
+                
             }
         }
     }
