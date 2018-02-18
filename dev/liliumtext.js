@@ -84,16 +84,18 @@ class LiliumTextWebCommand extends LiliumTextCommand {
     }
 
     executeText() {
-        const selection = this.editor.getSelection();
+        const selection = this.editor.restoreSelection();
         const nodetype = this.param;
 
         if (selection.type == "Caret") {
             const context = this.editor.createSelectionContext(selection.focusNode);
             let maybeCtxElem = context.find(x => x.type == nodetype);
             if (maybeCtxElem) {
+                this.editor.log('Unwrapping element of node type ' + nodetype);
                 const el = maybeCtxElem.element;
                 this.editor.unwrap(el);
             } else {
+                this.editor.log('Selecting word and wrapping with element of node type ' + nodetype);
                 this.editor.selectWord(selection);
                 this.editor.wrap(selection, document.createElement(nodetype));
             }
@@ -106,7 +108,12 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             const [leftExistWrap, rightExistWrap] = [leftCtx.find(x => x.type == nodetype), rightCtx.find(x => x.type == nodetype)];
             
             if (left === right && !leftExistWrap) {
-                return this.editor.wrap(selection, document.createElement(nodetype));
+                this.editor.log("Quick range wrap with element of node type " + nodetype);
+                this.editor.wrap(selection, document.createElement(nodetype));
+            } else if (left === right) {
+                this.editor.log("Quick range unwrap from node " + nodetype);
+            } else {
+
             }
         }
     }
@@ -119,8 +126,21 @@ class LiliumTextWebCommand extends LiliumTextCommand {
 
     }
 
-    executeRemoveFormat() {
+    executeRemove() {
+        if (this.param) {
+            const el = this.editor.restoreSelection().focusNode.parentElement;
+            const context = this.editor.createSelectionContext(el);
 
+            const wrapperCtx = context.find(x => x.type == this.param);
+            if (wrapperCtx) {
+                this.editor.log('Unwrapping node ' + this.param);
+                this.editor.unwrap(wrapperCtx.element);
+            }
+        } else {
+            this.editor.log('Executing native command removeFormat');
+            this.editor.restoreSelection();
+            document.execCommand('removeFormat', false, "");
+        }
     }
 
     execute(ev) {
@@ -128,7 +148,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             case "text":            this.executeText();         break;
             case "exec":            this.executeExec();         break;
             case "block":           this.executeBlock();        break;
-            case "removeFormat":    this.executeRemoveFormat(); break;
+            case "remove":          this.executeRemove();       break;
 
             // Default is noOp, but display warning for easier debugging
             default:                this.editor.log(`Warning : Tried to execute command with unknown webName [${this.webName}]`);
@@ -186,7 +206,7 @@ class LiliumText {
                 new LiliumTextWebCommand('text', editor.settings.italicnode || "em", "far fa-italic"), 
                 new LiliumTextWebCommand('text', editor.settings.underlinenode || "u", "far fa-underline"),  
                 new LiliumTextWebCommand('text', editor.settings.strikenode || "strike", "far fa-strikethrough"),
-                new LiliumTextWebCommand('removeFormat', undefined, "far fa-eraser")
+                new LiliumTextWebCommand('remove', undefined, "far fa-eraser")
             ], [
                 new LiliumTextWebCommand('exec', "undo", "far fa-undo"), 
                 new LiliumTextWebCommand('exec', "redo", "far fa-redo")
@@ -199,7 +219,7 @@ class LiliumText {
             ], [
                 new LiliumTextWebCommand('exec', "insertOrderedList",   "far fa-list-ol"),  
                 new LiliumTextWebCommand('exec', "insertUnorderedList", "far fa-list-ul"), 
-                new LiliumTextWebCommand('exec', 'unlink', 'far fa-unlink')
+                new LiliumTextWebCommand('remove', 'a', 'far fa-unlink')
             ], [
                 new LiliumTextCustomCommand("code", editor.toggleCode.bind(editor), "far fa-code")
             ]
@@ -336,7 +356,7 @@ class LiliumText {
     }
 
     insert(element) {
-        const selection = this.getSelection();
+        const selection = this.restoreSelection();
         let range = this.getRange();
         if (!this.isRangeInEditor(range)) {
             this.contentel.focus();
@@ -377,7 +397,7 @@ class LiliumText {
         return this._tempRange;
     }
 
-    getSelection() {
+    restoreSelection() {
         const sel = window.getSelection();
         if (!this.focused) {
             sel.removeAllRanges();
