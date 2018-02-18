@@ -15,76 +15,13 @@ class LiliumTextCommand {
             el.appendChild(txt);
         }
 
-        el.addEventListener('mousedown', (ev) => { 
+        el.addEventListener('click', (ev) => { 
             editor.log('Executed command ' + this.webName + (this.param ? (" with parameter '" + this.param + "'") : ''));
             editor.fire('command', this.webName);
             this.execute(ev, this, editor); 
         });
 
         return el;
-    }
-
-    createSelectionContext(sel) {
-        let elem = sel.focusNode;
-        const context = [];
-
-        do {
-            context.push({ type : elem.nodeName.toLowerCase().replace('#', ''), element : elem });
-            elem = elem.parentElement;
-        } while (elem != this.editor.contentel && elem);
-
-        return context;
-    }
-
-    elevateToNodeType(sel, nodename) {
-        nodename = nodename.toUpperCase();
-        let par = sel.focusNode.parentElement;
-        while (par.nodeName != nodename) {
-            par = par.parentElement;
-
-            if (par == editor.contentel || !par) {
-                return false;
-            }
-        }
-
-        return par;
-    }
-
-    selectWord(sel) {
-        const range = document.createRange();
-        range.setStart(sel.anchorNode, sel.anchorOffset);
-        range.setEnd(sel.focusNode, sel.focusOffset);
-        
-        const backwards = range.collapsed;
-        range.detach();
-
-        const endNode = sel.focusNode
-        const endOffset = sel.focusOffset;
-        sel.collapse(sel.anchorNode, sel.anchorOffset);
-
-        const direction = backwards ? ['backward', 'forward'] : ['forward', 'backward'];
-
-        sel.modify("move", direction[0], "character");
-        sel.modify("move", direction[1], "word");
-        sel.extend(endNode, endOffset);
-        sel.modify("extend", direction[1], "character");
-        sel.modify("extend", direction[0], "word");
-    }
-
-    selectParent(sel, par) {
-        const range = document.createRange();
-        range.selectNode(par || sel.focusNode.parentNode);
-
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-    }
-
-    wrap(sel, elem) {
-        const range = sel.getRangeAt(0).cloneRange();
-        range.surroundContents(elem);
-
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
     }
 }
 
@@ -147,24 +84,31 @@ class LiliumTextWebCommand extends LiliumTextCommand {
     }
 
     executeText() {
-        const selection = window.getSelection();
-        const context = this.createSelectionContext(selection);
+        const selection = this.editor.getSelection();
         const nodetype = this.param;
 
         if (selection.type == "Caret") {
+            const context = this.editor.createSelectionContext(selection.focusNode);
             let maybeCtxElem = context.find(x => x.type == nodetype);
             if (maybeCtxElem) {
                 const el = maybeCtxElem.element;
-                const par = el.parentElement;
-                while(el.firstChild) par.insertBefore(el.firstChild, el);
-                el.remove();
+                this.editor.unwrap(el);
             } else {
-                this.selectWord(selection);
-                this.wrap(selection, document.createElement(nodetype));
+                this.editor.selectWord(selection);
+                this.editor.wrap(selection, document.createElement(nodetype));
             }
-        } 
+        } else if (selection.type == "Range") {
+            const [left, leftAt, right, rightAt] = selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING ? 
+                [selection.anchorNode, selection.anchorOffset, selection.focusNode, selection.focusOffset] : 
+                [selection.focusNode, selection.focusOffset, selection.anchorNode, selection.anchorOffset]; 
 
-        
+            const [leftCtx, rightCtx] = [this.editor.createSelectionContext(left), this.editor.createSelectionContext(right)];
+            const [leftExistWrap, rightExistWrap] = [leftCtx.find(x => x.type == nodetype), rightCtx.find(x => x.type == nodetype)];
+            
+            if (left === right && !leftExistWrap) {
+                return this.editor.wrap(selection, document.createElement(nodetype));
+            }
+        }
     }
 
     executeExec() {
@@ -267,9 +211,11 @@ class LiliumText {
     }
 
     constructor(nameOrElem, settings = {}) {
+        this.initat = window.performance.now();
         this.initialized = false;
         this.destroyed = false;
         this.codeview = false;
+        this.focused = false;
         this.hooks = {};
 
         this.wrapperel = typeof nameOrElem == "string" ? document.querySelector(nameOrElem) || document.getElementById(nameOrElem) : nameOrElem;
@@ -277,7 +223,7 @@ class LiliumText {
             throw new Error("LiliumText - Invalid element, DOM selector, or DOM element ID.");
         }
 
-        this.id = this.wrapperel.id || ("liliumtext-" + btoa(Math.random().toString()));
+        this.id = this.wrapperel.id || ("liliumtext-" + btoa(Math.random().toString()).slice(0, -2));
         LiliumText.instances[this.id] = this;
 
         this.settings = Object.assign(LiliumText.defaultSettings, settings);
@@ -296,6 +242,8 @@ class LiliumText {
 
         this._init();
         this.settings.initrender && this.render(); 
+
+        this.log('Ready in ' + (window.performance.now() - this.initat) + 'ms');
     }
 
     destroy(fulldelete) {
@@ -326,55 +274,127 @@ class LiliumText {
         this.contentel.contentEditable = true;
     }
 
-    isRangeInEditor(range) {
-        if (range) {
-            let par = range.endContainer;
-            while (par.parentElement) {
-                if (par == this.contentel) {
-                    return true;
-                }
+    createSelectionContext(elem) {
+        const context = [];
 
-                par = par.parentElement;
-            }
+        do {
+            context.push({ type : elem.nodeName.toLowerCase().replace('#', ''), element : elem });
+            elem = elem.parentElement;
+        } while (elem != this.contentel && elem);
+
+        return context;
+    }
+
+    selectWord(sel) {
+        const range = document.createRange();
+        range.setStart(sel.anchorNode, sel.anchorOffset);
+        range.setEnd(sel.focusNode, sel.focusOffset);
+        
+        const backwards = range.collapsed;
+        range.detach();
+
+        const endNode = sel.focusNode
+        const endOffset = sel.focusOffset;
+        sel.collapse(sel.anchorNode, sel.anchorOffset);
+
+        const direction = backwards ? ['backward', 'forward'] : ['forward', 'backward'];
+
+        sel.modify("move", direction[0], "character");
+        sel.modify("move", direction[1], "word");
+        sel.extend(endNode, endOffset);
+        sel.modify("extend", direction[1], "character");
+        sel.modify("extend", direction[0], "word");
+    }
+
+    selectParent(sel, par) {
+        const range = document.createRange();
+        range.selectNode(par || sel.focusNode.parentNode);
+
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+    }
+
+    wrap(sel, elem) {
+        const range = sel.getRangeAt(0).cloneRange();
+        range.surroundContents(elem);
+
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+    }
+
+    unwrap(el) {
+        const par = el.parentElement;
+        while(el.firstChild) {
+            par.insertBefore(el.firstChild, el);
         }
+        el.remove();
+    }
 
-        return false;
+
+    isRangeInEditor(range) {
+        return range && range.startContainer.compareDocumentPosition(this.contentel) & Node.DOCUMENT_POSITION_CONTAINS;
     }
 
     insert(element) {
-        let range = this._tempRange || this._makeRange();
+        const selection = this.getSelection();
+        let range = this.getRange();
         if (!this.isRangeInEditor(range)) {
             this.contentel.focus();
-            range = this._makeRange();
+            range = this.storeRange();
         }
 
         range.insertNode(element);
         range.setStartAfter(element);
 
-        this._tempSelection.removeAllRanges();
-        this._tempSelection.addRange(range);
-        this._tempRange = range;
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     _focused() {
         const eventresult = this.fire('focus');
+        this.focused = true;
         if (!eventresult || !eventresult.includes(false)) {
+            this._tempSelection = undefined;
+            this._tempRange = undefined;
             document.execCommand("defaultParagraphSeparator", false, this.settings.breaktag);
         }
     }
 
-    _makeRange() {
-        this._tempSelection = window.getSelection();
+    _clicked(event) {
+        const selection = window.getSelection();
+        const context = this.createSelectionContext(selection.focusNode);
+        const element = selection.focusNode.parentElement;
+        this.fire('clicked', { context, event, selection, element });
+    }
 
-        if (this._tempSelection.focusNode) {
-            this._tempRange = this._tempSelection.getRangeAt(0).cloneRange();
+    storeRange() {
+        const tempSelection = window.getSelection();
+
+        if (tempSelection.focusNode) {
+            this._tempRange = tempSelection.getRangeAt(0).cloneRange();
         }
 
         return this._tempRange;
     }
 
+    getSelection() {
+        const sel = window.getSelection();
+        if (!this.focused) {
+            sel.removeAllRanges();
+            sel.addRange(this.getRange());
+        }
+
+        return sel;
+    }
+
+    getRange() {
+        return this._tempRange || this.storeRange();
+    }
+
     _blurred() {
-        this._makeRange();
+        this.focused = false;
+        this.storeRange();
+        this.fire('blur');
     }
 
     _pasted(e) {
@@ -433,6 +453,7 @@ class LiliumText {
         this.contentel.addEventListener('paste', this.settings.onpaste || this._pasted.bind(this));
         this.contentel.addEventListener('focus', this._focused.bind(this));
         this.contentel.addEventListener('blur',  this._blurred.bind(this));
+        this.contentel.addEventListener('click', this._clicked.bind(this));
 
         this.fire('init');
         this.log('Initialized object');
