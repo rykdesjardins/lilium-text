@@ -94,6 +94,8 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 this.editor.log('Unwrapping element of node type ' + nodetype);
                 const el = maybeCtxElem.element;
                 this.editor.unwrap(el);
+
+                selection.removeAllRanges();
             } else {
                 this.editor.log('Selecting word and wrapping with element of node type ' + nodetype);
                 this.editor.selectWord(selection);
@@ -107,12 +109,14 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             const [leftCtx, rightCtx] = [this.editor.createSelectionContext(left), this.editor.createSelectionContext(right)];
             const [leftExistWrap, rightExistWrap] = [leftCtx.find(x => x.type == nodetype), rightCtx.find(x => x.type == nodetype)];
             
-            if (left === right && !leftExistWrap) {
+            if (left.parentElement === right.parentElement && !leftExistWrap) {
                 this.editor.log("Quick range wrap with element of node type " + nodetype);
                 this.editor.wrap(selection, document.createElement(nodetype));
             } else if (left === right) {
                 this.editor.log("Quick range unwrap from node " + nodetype);
             } else {
+                this.editor.log("Long logic with range using node type " + nodetype);
+                // This is the most fun part
 
             }
         }
