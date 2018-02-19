@@ -47,57 +47,92 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 this.editor.log('Unwrapping element of node type ' + nodetype);
                 const el = maybeCtxElem.element;
                 this.editor.unwrap(el);
-
-                selection.removeAllRanges();
-            } else {
-                this.editor.log('Selecting word and wrapping with element of node type ' + nodetype);
-                this.editor.selectWord(selection);
-                this.editor.wrap(selection, document.createElement(nodetype));
             }
         } else if (selection.type == "Range") {
-            const [left, leftAt, right, rightAt] = selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING ? 
-                [selection.anchorNode, selection.anchorOffset, selection.focusNode, selection.focusOffset] : 
-                [selection.focusNode, selection.focusOffset, selection.anchorNode, selection.anchorOffset]; 
+            const [left, right] = selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING ? 
+                [selection.anchorNode, selection.focusNode] : [selection.focusNode, selection.anchorNode]; 
 
             const [leftCtx, rightCtx] = [this.editor.createSelectionContext(left), this.editor.createSelectionContext(right)];
             const [leftExistWrap, rightExistWrap] = [leftCtx.find(x => x.type == nodetype), rightCtx.find(x => x.type == nodetype)];
             
+            // Fun! :D
+            this.editor.log("Long logic with range using node type " + nodetype);
+            
+            const range = selection.getRangeAt(0);
+            const frag = range.extractContents();
+
+            if (frag.childNodes[0].nodeName == "#text" && !frag.childNodes[0].data.trim()) {
+                this.editor.log("Removed extra empty text node from fragment");
+                range.insertNode(frag.childNodes[0]);
+            }
+
             if (left.parentElement === right.parentElement && !leftExistWrap) {
                 this.editor.log("Quick range wrap with element of node type " + nodetype);
-                this.editor.wrap(selection, document.createElement(nodetype));
-            } else {
-                this.editor.log("Long logic with range using node type " + nodetype);
-                // This is the most fun part
-                // So we're dealing with a selection where the start and end are inside different elements (partial selection).
-                // Here's what's going to happen.
-                //
-                //  IF left postion XOR right portion has a parent with the nodeName == nodetype :
-                //      Since they don't have the same parent, we'll extend the parent node to wrap the entire selection.
-                //      This will require either prepending or appending content from outside the wrapper node to inside.
-                //
-                //  ELSE IF both left AND right portions have a parent with the nodeName == nodetype :
-                //      We need to unwrap both of them while keeping the left padding and right padding inside previous tag
-                //      If padding tags are empty, remove them.
-                //
-                //  ELSE
-                //      We need to wrap everything inside a brand new <nodetype> element.
-                //      Create the element, push the entire content inside the new element.
-                //      Insert element before selection, remove trailing tags if any
-                //
-                // Fun! :D
-                
+                const newElem = document.createElement(nodetype);
+                newElem.appendChild(frag);
+                selection.getRangeAt(0).insertNode(newElem);
+            } else if (!leftExistWrap != !rightExistWrap) {
                 // Apparently there is no XOR in Javascript, so here's a syntax monstrosity
                 // This will not execute the block unless one is truthy and one is falsey
-                if (!leftExistWrap != !rightExistWrap) {
-                    // Extend existing wrapper
+                this.editor.log('XOR range wrapper extension of node type ' + nodetype);
 
-                } else if (leftExistWrap && rightExistWrap) {
-                    // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
-                    
-                } else {
-                    // Create new element, insert before selection
-                    
+                const newElem = document.createElement(nodetype);
+                newElem.appendChild(frag);
+                selection.getRangeAt(0).insertNode(newElem);
+
+                // Extend existing wrapper
+                const wrapper = leftExistWrap || rightExistWrap;
+                Array.prototype.forEach.call(wrapper.element.querySelectorAll(nodetype), node => {
+                    this.editor.unwrap(node);
+                });
+            } else if (leftExistWrap && rightExistWrap && leftExistWrap.element === rightExistWrap.element) {
+                // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
+                this.editor.log("Placeholder unwrap from two sources with node types : " + nodetype);
+                const placeholder = document.createElement('liliumtext-placeholder');
+                selection.getRangeAt(0).insertNode(placeholder);
+
+                const leftEl = leftExistWrap.element;
+                const clone = leftEl.cloneNode();
+                leftEl.parentElement.insertBefore(clone, leftEl);
+
+                while (leftEl.firstChild != placeholder) {
+                    clone.appendChild(leftEl.firstChild);
                 }
+
+                leftEl.parentElement.insertBefore(frag, leftEl);
+                placeholder.remove();
+
+                this.editor.log('Removing empty trailing <' + nodetype + '> element');
+                !clone.textContent.trim() && clone.remove();
+                !leftEl.textContent.trim() && leftEl.remove();
+            } else if (leftExistWrap && rightExistWrap) {
+                this.editor.log("Merge wrap from two sources with node types : " + nodetype);
+                // Merge wrap
+                const leftFrag = frag.firstChild;
+                const rightFrag = frag.lastChild;
+                while (leftFrag.nextSibling != rightFrag) {
+                    leftFrag.appendChild(leftFrag.nextSibling);
+                }
+
+                while(rightFrag.firstChild) {
+                    leftFrag.appendChild(rightFrag.firstChild);
+                }
+
+                rightFrag.remove();
+                selection.getRangeAt(0).insertNode(frag);
+            } else if (frag.childNodes.length == 1) {
+                // Entire element is selected, Unwrap entire element
+                this.editor.log("Single unwrap of node type : " + nodetype);
+                const wrap = frag.childNodes[0];
+                while (wrap.lastChild) {
+                    selection.getRangeAt(0).insertNode(wrap.lastChild);
+                }
+            } else {
+                // Create new element, insert before selection
+                this.editor.log("Fragment wrap with node type : " + nodetype);
+                const newElem = document.createElement(nodetype);
+                newElem.appendChild(frag);
+                selection.getRangeAt(0).insertNode(newElem);
             }
         }
     }
@@ -319,11 +354,13 @@ class LiliumText {
     }
 
     wrap(sel, elem) {
-        const range = sel.getRangeAt(0).cloneRange();
+        throw new Error('DEPRECATED DUDE');
+        /* 
+        // Very buggy, much what, many unstable, wow
+        const range = sel.getRangeAt(0);
         range.surroundContents(elem);
-
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
+        range.selectNode(elem);
+        */
     }
 
     unwrap(el) {
@@ -492,7 +529,7 @@ class LiliumText {
     }
 
     fire(eventname, args) {
-        this.log('Firing event : ' + eventname);
+        // this.log('Firing event : ' + eventname);
         return this.hooks[eventname] && this.hooks[eventname].map(callback => callback(this, args));
     }
 
