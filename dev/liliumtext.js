@@ -65,8 +65,6 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             if (left.parentElement === right.parentElement && !leftExistWrap) {
                 this.editor.log("Quick range wrap with element of node type " + nodetype);
                 this.editor.wrap(selection, document.createElement(nodetype));
-            } else if (left === right) {
-                this.editor.log("Quick range unwrap from node " + nodetype);
             } else {
                 this.editor.log("Long logic with range using node type " + nodetype);
                 // This is the most fun part
@@ -88,6 +86,18 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 //
                 // Fun! :D
                 
+                // Apparently there is no XOR in Javascript, so here's a syntax monstrosity
+                // This will not execute the block unless one is truthy and one is falsey
+                if (!leftExistWrap != !rightExistWrap) {
+                    // Extend existing wrapper
+
+                } else if (leftExistWrap && rightExistWrap) {
+                    // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
+                    
+                } else {
+                    // Create new element, insert before selection
+                    
+                }
             }
         }
     }
