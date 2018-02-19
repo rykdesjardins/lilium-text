@@ -138,11 +138,34 @@ class LiliumTextWebCommand extends LiliumTextCommand {
     }
 
     executeExec() {
-
+        this.editor.restoreSelection();
+        document.execCommand(this.param);
     }
 
     executeBlock() {
+        const selection = this.editor.restoreSelection();
+        const nodetype = this.param;
+        const context = this.editor.createSelectionContext(selection.focusNode);
+        const blocktags = this.editor.settings.blockelements;
 
+        const topLevelTag = context[context.length - 1].element;
+
+        if (topLevelTag.nodeName != nodetype) {
+            const newNode = document.createElement(nodetype);
+            topLevelTag.parentElement.insertBefore(newNode, topLevelTag);
+
+            if (topLevelTag.data) {
+                newNode.appendChild(topLevelTag);
+            } else {
+                while (topLevelTag.firstChild) {
+                    newNode.appendChild(topLevelTag.firstChild);
+                }
+            
+                topLevelTag.remove();
+            }
+        }
+
+        this.editor.restoreSelection();
     }
 
     executeRemove() {
@@ -162,12 +185,24 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         }
     }
 
+    executeInsert() {
+        const nodetype = this.param;
+        const newNode = document.createElement(nodetype);
+
+        const el = this.editor.restoreSelection().focusNode.parentElement;
+        const context = this.editor.createSelectionContext(el);
+        const topLevelEl = context[context.length - 1].element;
+        
+        this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
+    }
+
     execute(ev) {
         switch (this.webName) {
             case "text":            this.executeText();         break;
             case "exec":            this.executeExec();         break;
             case "block":           this.executeBlock();        break;
             case "remove":          this.executeRemove();       break;
+            case "insert":          this.executeInsert();       break;
 
             // Default is noOp, but display warning for easier debugging
             default:                this.editor.log(`Warning : Tried to execute command with unknown webName [${this.webName}]`);
@@ -235,6 +270,8 @@ class LiliumText {
                 new LiliumTextWebCommand("block", "h2", "far fa-h2"), 
                 new LiliumTextWebCommand("block", "h3", "far fa-h3"),
                 new LiliumTextWebCommand("block", "blockquote", "far fa-quote-right"),
+            ], [
+                new LiliumTextWebCommand('insert', 'hr', 'far fa-minus')
             ], [
                 new LiliumTextWebCommand('exec', "insertOrderedList",   "far fa-list-ol"),  
                 new LiliumTextWebCommand('exec', "insertUnorderedList", "far fa-list-ul"), 
@@ -318,7 +355,7 @@ class LiliumText {
 
         do {
             context.push({ type : elem.nodeName.toLowerCase().replace('#', ''), element : elem });
-            elem = elem.parentElement;
+            elem = elem.parentNode;
         } while (elem != this.contentel && elem);
 
         return context;
