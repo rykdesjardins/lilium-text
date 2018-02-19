@@ -390,16 +390,6 @@ class LiliumText {
         window.getSelection().addRange(range);
     }
 
-    wrap(sel, elem) {
-        throw new Error('DEPRECATED DUDE');
-        /* 
-        // Very buggy, much what, many unstable, wow
-        const range = sel.getRangeAt(0);
-        range.surroundContents(elem);
-        range.selectNode(elem);
-        */
-    }
-
     unwrap(el) {
         const par = el.parentElement;
         while(el.firstChild) {
@@ -408,6 +398,20 @@ class LiliumText {
         el.remove();
     }
 
+    _observe(record) {
+        
+    }
+
+    _startHistory() {
+        this._history = {
+            mutations : []
+        };
+
+        if (window.MutationObserver) {
+            this.observer = new MutationObserver(this._observe.bind(this));
+            this.observer.observe(this.contentel, { attributes: true, childList: true });
+        }
+    }
 
     isRangeInEditor(range) {
         return range && range.startContainer.compareDocumentPosition(this.contentel) & Node.DOCUMENT_POSITION_CONTAINS;
@@ -532,6 +536,8 @@ class LiliumText {
         this.contentel.addEventListener('focus', this._focused.bind(this));
         this.contentel.addEventListener('blur',  this._blurred.bind(this));
         this.contentel.addEventListener('click', this._clicked.bind(this));
+        
+        this._startHistory();
 
         this.fire('init');
         this.log('Initialized object');
