@@ -20,11 +20,6 @@
 
         </div>
 
-        <div id="history">
-            <h2>History</h2>
-            <ul id="history-list"></ul>
-        </div>
-
         <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
         <script src="liliumtext.js"></script>
         <script>
@@ -34,12 +29,6 @@ const content = "<h1>This is awesome.</h1><hr/><p>Testing with <u>cool</u> conte
                 width : "800px",
                 height : "640px",
                 content : content
-            });
-
-            editor.bind('history', function(editor, entry) {
-                const li = document.createElement('li');
-                li.textContent = "Pushed entry with type " + entry.type;
-                document.getElementById('history-list').appendChild(li);
             });
         </script>
 

@@ -1,8 +1,8 @@
 {
   "name": "lilium-text",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Web rich text editor. Not ready to be used at all.",
-  "main": "testserver.js",
+  "main": "build/liliumtext.js",
   "scripts": {
     "build": "lessc dev/minim.less build/minim.css && uglifycss build/minim.css > build/minim.min.css && babel dev/liliumtext.js -o build/liliumtext.js",
     "test": "echo \"Error: no test specified\" && exit 1"
