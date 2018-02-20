@@ -234,6 +234,7 @@ class LiliumTextCustomCommand extends LiliumTextCommand {
 
     execute() {
         this.callback(...arguments);
+        this.editor.takeSnapshot();
         return false;
     }
 }
