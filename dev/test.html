@@ -23,7 +23,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
         <script src="liliumtext.js"></script>
         <script>
-const content = "<h1>This is awesome.</h1><p>Testing with <u>cool</u> content. <b>Lorem Ipsum</b>? Nah. I rather write real stuff to fill up the small form I created using editable content. Yep! That's pretty neat! Right?&nbsp;</p><h2>Right...?</h2><script>alert('No XSS')</scr"+"ipt><p><b>Here,</b> we have fun. There is Javascript above this paragraph, but it won't get executed. You can still see it though.</p>";
+const content = "<h1>This is awesome.</h1><hr/><p>Testing with <u>cool</u> content. <b>Lorem Ipsum</b>? Nah. I rather write real stuff to fill up the small form I created using editable content. Yep! That's pretty neat! Right?&nbsp;</p><h2>Right...?</h2><script>alert('No XSS')</scr"+"ipt><p><b>Here,</b> we have fun. There is Javascript above this paragraph, but it won't get executed. You can still see it though.</p><hr/><p>Testing : <b><i>This should</i> be an </b> interesting <i>playground <b>where <u>weird</u> things</b> happen <strike>sometimes</strike>.</i></p>";
             const editor = new LiliumText("liliumtext", { 
                 dev : true,
                 width : "640px",

@@ -144,6 +144,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
 
     executeBlock() {
         const selection = this.editor.restoreSelection();
+        const range = selection.getRangeAt(0);
         const nodetype = this.param;
         const context = this.editor.createSelectionContext(selection.focusNode);
         const blocktags = this.editor.settings.blockelements;
@@ -163,9 +164,13 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             
                 topLevelTag.remove();
             }
-        }
 
-        this.editor.restoreSelection();
+            range.setStart(newNode, 1);
+            range.collapse(true);
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
     }
 
     executeRemove() {
