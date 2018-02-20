@@ -199,6 +199,13 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         const topLevelEl = context[context.length - 1].element;
         
         this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
+
+        const range = this.editor.restoreSelection().getRangeAt(0);
+        range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
+        range.collapse(true);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     execute(ev) {
