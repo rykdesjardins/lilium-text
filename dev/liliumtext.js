@@ -194,13 +194,14 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         const nodetype = this.param;
         const newNode = document.createElement(nodetype);
 
-        const el = this.editor.restoreSelection().focusNode.parentElement;
+        const selection = this.editor.restoreSelection();
+        const el = selection.focusNode.parentElement;
         const context = this.editor.createSelectionContext(el);
         const topLevelEl = context[context.length - 1].element;
         
         this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
-        const range = this.editor.restoreSelection().getRangeAt(0);
+        const range = selection.getRangeAt(0);
         range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
         range.collapse(true);
 

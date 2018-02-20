@@ -48,7 +48,9 @@
 
                 register() {
                     this.instance.log("Adding command to top bar");
-                    this.instance.addCommand(this.insertCommand);
+
+                    // Add image insertion command in fourth group (index 3)
+                    this.instance.addCommand(this.insertCommand, 3);
                 }
 
                 unregister() {
