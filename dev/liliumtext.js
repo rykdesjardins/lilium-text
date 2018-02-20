@@ -213,6 +213,8 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             default:                this.editor.log(`Warning : Tried to execute command with unknown webName [${this.webName}]`);
         }
 
+        this.editor.takeSnapshot();
+
         ev.stopPropagation();
         ev.preventDefault();
         return false;
@@ -251,7 +253,6 @@ class LiliumTextHistoryEntry {
                 this.record = record;
                 this.target = record.target;
                 this.previousState = record.oldValue;
-
             }
         }
 
@@ -268,6 +269,38 @@ class LiliumTextHistoryEntry {
                 this.record = record;
             }   
         }
+
+        LiliumTextHistoryEntry.AutomaticSnapshotEntry = class AutomaticSnapshotEntry extends LiliumTextHistoryEntry {
+            constructor(state) {
+                super("AutomaticSnapshot");
+                this.markup = state;
+            }
+
+            undo(editor) {
+                if (editor.content != this.markup) {
+                    editor.content = this.markup;
+                    return this.markup;
+                }
+
+                return false;
+            }
+        }
+
+        LiliumTextHistoryEntry.ManualSnapshotEntry = class ManualSnapshotEntry extends LiliumTextHistoryEntry {
+            constructor(state) {
+                super("ManualSnapshot");
+                this.markup = state;
+            }
+
+            undo(editor) {
+                if (editor.content != this.markup) {
+                    editor.content = this.markup;
+                    return this.markup;
+                }
+
+                return false;
+            }
+        }
     }
 
     static fromRecord(record) {
@@ -276,6 +309,12 @@ class LiliumTextHistoryEntry {
             case "characterData" : return new LiliumTextHistoryEntry.TextHistoryEntry(record);
             case "attributes" : return new LiliumTextHistoryEntry.AttributesHistoryEntry(record);
         }
+    }
+
+    static fromSnapshot(markup, manual) {
+        return manual ? 
+            new LiliumTextHistoryEntry.ManualSnapshotEntry(markup) :
+            new LiliumTextHistoryEntry.AutomaticSnapshotEntry(markup);
     }
 }
 LiliumTextHistoryEntry.makeStaticClassesBecauseJavascriptIsStillWeird();
@@ -291,6 +330,8 @@ class LiliumText {
             width : "auto",
             boldnode : "strong",
             italicnode : "em",
+            historyInterval : 5000,
+            maxHistoryStack : 100,
             underlinenode : "u",
             strikenode : "strike",
             height : "420px",
@@ -311,8 +352,8 @@ class LiliumText {
                 new LiliumTextWebCommand('text', editor.settings.strikenode || "strike", "far fa-strikethrough"),
                 new LiliumTextWebCommand('remove', undefined, "far fa-eraser")
             ], [
-                new LiliumTextWebCommand('exec', "undo", "far fa-undo"), 
-                new LiliumTextWebCommand('exec', "redo", "far fa-redo")
+                new LiliumTextCustomCommand('undo', editor.undo.bind(editor), 'far fa-undo'),
+                new LiliumTextCustomCommand('redo', editor.redo.bind(editor), 'far fa-redo')
             ], [
                 new LiliumTextWebCommand('block', editor.settings.breaktag || 'p', 'far fa-paragraph'), 
                 new LiliumTextWebCommand("block", "h1", "far fa-h1"), 
@@ -341,6 +382,7 @@ class LiliumText {
         this.destroyed = false;
         this.codeview = false;
         this.focused = false;
+        this._historylastState = "";
         this.hooks = {};
 
         this.wrapperel = typeof nameOrElem == "string" ? document.querySelector(nameOrElem) || document.getElementById(nameOrElem) : nameOrElem;
@@ -367,6 +409,7 @@ class LiliumText {
 
         this._init();
         this.settings.initrender && this.render(); 
+        this.takeSnapshot();
 
         this.log('Ready in ' + (window.performance.now() - this.initat) + 'ms');
     }
@@ -449,18 +492,41 @@ class LiliumText {
 
     _pushToHistory(entry) {
         this.fire('history', entry);
-        this._history.mutations.push(entry);
+        // Push to history, and remove first element if array is too big
+        this._history.mutations.push(entry) > this.settings.maxHistoryStack && this._history.mutations.shift();
+        this._history.undoStack = [];
     }
 
     _observe(record) {
         record.forEach(x => this._pushToHistory(LiliumTextHistoryEntry.fromRecord(x)));
     }
 
+    _takeSnapshot(manual) {
+        if (this.contentel.innerHTML != this._historylastState) {
+            this._historylastState = this.contentel.innerHTML;
+            this._pushToHistory(LiliumTextHistoryEntry.fromSnapshot(this._historylastState, manual));
+        }
+    }
+
     _startHistory() {
-        if (window.MutationObserver) {
+        if (false && window.MutationObserver) {
             this.observer = new MutationObserver(this._observe.bind(this));
             this.observer.observe(this.contentel, { childList: true, subtree : true });
+        } else {
+            this.snapshotTimerID = setInterval(() => {
+                this._takeSnapshot();
+            }, this.settings.historyInterval);
         }
+    }
+
+    resetSnapshot() {
+        this.snapshotTimerID && clearInterval(this.snapshotTimerID);
+        this._startHistory();
+    }
+
+    takeSnapshot() {
+        this.resetSnapshot();
+        this._takeSnapshot(true);
     }
 
     isRangeInEditor(range) {
@@ -499,6 +565,34 @@ class LiliumText {
         this.fire('clicked', { context, event, selection, element });
     }
 
+    redo() {
+        if (this._history.undoStack.length != 0) {
+            const undoItem = this._history.undoStack.pop();
+            this._history.mutations.push(undoItem.mutation);
+            this.content = undoItem.markup; 
+            this.resetSnapshot();
+        }
+    }
+
+    undo() {
+        const mutations = this._history.mutations;
+        if (mutations.length != 0) {
+            let mutation = mutations.pop();
+            const oldMarkup = this.content;
+
+            const undid = mutation.undo(this);
+            if (!undid && mutations.length != 0) {
+                mutation = mutations.pop();
+                mutation.undo(this);
+            }
+
+            this._history.undoStack.push({ markup : oldMarkup, mutation });
+            this.resetSnapshot();
+        }
+
+        this.fire('undo');
+    }
+
     storeRange() {
         const tempSelection = window.getSelection();
 
@@ -527,6 +621,15 @@ class LiliumText {
         this.focused = false;
         this.storeRange();
         this.fire('blur');
+    }
+
+    _keydown(e) {
+        if ((e.ctrlKey || e.metaKey) && String.fromCharCode(e.which).toLowerCase() == 'z') {
+            e.preventDefault();
+            this.undo();
+
+            return false;
+        }
     }
 
     _pasted(e) {
@@ -576,23 +679,23 @@ class LiliumText {
         this.wrapperel.appendChild(this.codeel);
 
         if (this.settings.content && this.settings.initrender) {
-            setTimeout(() => {
+            //setTimeout(() => {
                 this.contentel.innerHTML = this.settings.content;
-            }, 10);
+            //}, 10);
         } else {
             this.contentel.appendChild(document.createElement(this.settings.breaktag));
         }
 
-        this.contentel.addEventListener('paste', this.settings.onpaste || this._pasted.bind(this));
-        this.contentel.addEventListener('focus', this._focused.bind(this));
-        this.contentel.addEventListener('blur',  this._blurred.bind(this));
-        this.contentel.addEventListener('click', this._clicked.bind(this));
+        this.contentel.addEventListener('paste',   this.settings.onpaste || this._pasted.bind(this));
+        this.contentel.addEventListener('focus',   this._focused.bind(this));
+        this.contentel.addEventListener('blur',    this._blurred.bind(this));
+        this.contentel.addEventListener('click',   this._clicked.bind(this));
+        this.contentel.addEventListener('keydown', this._keydown.bind(this));
         
         this._history = {
-            mutations : []
+            mutations : [],
+            undoStack : []
         };
-
-        this._startHistory();
 
         this.fire('init');
         this.log('Initialized object');
