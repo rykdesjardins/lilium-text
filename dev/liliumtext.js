@@ -322,6 +322,16 @@ class LiliumTextHistoryEntry {
 }
 LiliumTextHistoryEntry.makeStaticClassesBecauseJavascriptIsStillWeird();
 
+class LiliumTextPlugin {
+    constructor(identifier) {
+        this.identifier = identifier;
+        this.active = false;
+    }
+
+    register() {}
+    unregister() {}
+}
+
 class LiliumText {
     static get defaultSettings() {
         return {
@@ -329,6 +339,7 @@ class LiliumText {
             removepastedstyles : true,
             dev : false,
             hooks : {},
+            plugins : [],
             theme : "minim",
             width : "auto",
             boldnode : "strong",
@@ -387,6 +398,7 @@ class LiliumText {
         this.focused = false;
         this._historylastState = "";
         this.hooks = {};
+        this._plugins = []
 
         this.wrapperel = typeof nameOrElem == "string" ? document.querySelector(nameOrElem) || document.getElementById(nameOrElem) : nameOrElem;
         if (!this.wrapperel) {
@@ -399,7 +411,7 @@ class LiliumText {
         this.settings = Object.assign(LiliumText.defaultSettings, settings);
         this.commandsets = this.settings.commandsets || LiliumText.createDefaultCommands(this);
         this.log = this.settings.dev ? LiliumText.makeLogFunction() : (function() {});
-        this.log('Created LiliumText object');
+        this.log('Created LiliumText instance');
 
         this.log('Firing document event');
         document.dispatchEvent(new CustomEvent("liliumTextCreated", { detail : this }));
@@ -670,8 +682,20 @@ class LiliumText {
         }
     }
 
+    _registerAllPlugins() {
+        this.settings.plugins && this.settings.plugins.forEach( pluginClass => this.registerPlugin(pluginClass) );
+    }
+
+    registerPlugin(pluginClass) {
+        const pluginInstance = new pluginClass(this);
+
+        this.log('Registering plugin with id ' + pluginInstance.identifier);
+        pluginInstance.register();
+        this._plugins.push(pluginInstance);
+    }
+
     _init() {
-        this.log('Initializing object');
+        this.log('Initializing LiliumText instance');
         this.toolbarel = document.createElement('div');
         this.toolbarel.className = "liliumtext-topbar";
 
@@ -706,9 +730,10 @@ class LiliumText {
             undoStack : []
         };
         this._startHistory();
+        this._registerAllPlugins();
 
         this.fire('init');
-        this.log('Initialized object');
+        this.log('Initialized LiliumText instance');
         this.initialized = true;
     }
 
@@ -762,7 +787,7 @@ class LiliumText {
     }
 
     render() {
-        this.log('Rendering object');
+        this.log('Rendering LiliumText instance');
         this.fire('willrender');
 
         this.log('Clearing toolbar');
@@ -817,5 +842,5 @@ class LiliumText {
 LiliumText.instances = {};
 
 if (typeof module !== "undefined") {
-    module.exports = { LiliumText, LiliumTextCustomCommand, LiliumTextWebCommand, LiliumTextCommand }
+    module.exports = { LiliumText, LiliumTextCustomCommand, LiliumTextWebCommand, LiliumTextCommand, LiliumTextPlugin }
 }
