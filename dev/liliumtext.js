@@ -236,6 +236,50 @@ class LiliumTextCustomCommand extends LiliumTextCommand {
     }
 }
 
+class LiliumTextHistoryEntry {
+    constructor(type) { 
+        this.type = type;
+    }
+
+    undo() { }
+
+    static makeStaticClassesBecauseJavascriptIsStillWeird() {
+        // Create nested static classes
+        LiliumTextHistoryEntry.ChildListHistoryEntry = class ChildListHistoryEntry extends LiliumTextHistoryEntry {
+            constructor(record) {
+                super("ChildList");
+                this.record = record;
+                this.target = record.target;
+                this.previousState = record.oldValue;
+
+            }
+        }
+
+        LiliumTextHistoryEntry.TextHistoryEntry = class TextHistoryEntry extends LiliumTextHistoryEntry {
+            constructor(record) {
+                super("Text");
+                this.record = record;
+            }
+        }
+
+        LiliumTextHistoryEntry.AttributesHistoryEntry = class AttributesHistoryEntry extends LiliumTextHistoryEntry {
+            constructor(record) {
+                super("Attributes");
+                this.record = record;
+            }   
+        }
+    }
+
+    static fromRecord(record) {
+        switch (record.type) {
+            case "childList" : return new LiliumTextHistoryEntry.ChildListHistoryEntry(record);
+            case "characterData" : return new LiliumTextHistoryEntry.TextHistoryEntry(record);
+            case "attributes" : return new LiliumTextHistoryEntry.AttributesHistoryEntry(record);
+        }
+    }
+}
+LiliumTextHistoryEntry.makeStaticClassesBecauseJavascriptIsStillWeird();
+
 class LiliumText {
     static get defaultSettings() {
         return {
@@ -403,18 +447,19 @@ class LiliumText {
         el.remove();
     }
 
+    _pushToHistory(entry) {
+        this.fire('history', entry);
+        this._history.mutations.push(entry);
+    }
+
     _observe(record) {
-        
+        record.forEach(x => this._pushToHistory(LiliumTextHistoryEntry.fromRecord(x)));
     }
 
     _startHistory() {
-        this._history = {
-            mutations : []
-        };
-
         if (window.MutationObserver) {
             this.observer = new MutationObserver(this._observe.bind(this));
-            this.observer.observe(this.contentel, { attributes: true, childList: true });
+            this.observer.observe(this.contentel, { childList: true, subtree : true });
         }
     }
 
@@ -522,7 +567,8 @@ class LiliumText {
         this.contentel.contentEditable = true;
         this.contentel.className = "liliumtext-editor"
 
-        this.codeel = document.createElement('textarea');
+        this.codeel = document.createElement('div');
+        this.codeel.contentEditable = true;
         this.codeel.className = "liliumtext-code";
 
         this.wrapperel.appendChild(this.toolbarel);
@@ -542,6 +588,10 @@ class LiliumText {
         this.contentel.addEventListener('blur',  this._blurred.bind(this));
         this.contentel.addEventListener('click', this._clicked.bind(this));
         
+        this._history = {
+            mutations : []
+        };
+
         this._startHistory();
 
         this.fire('init');
@@ -587,9 +637,9 @@ class LiliumText {
 
         this.fire('code', this.codeview);
         if (this.codeview) {
-            this.codeel.value = this.contentel.innerHTML;
+            this.codeel.textContent = this.contentel.innerHTML;
         } else {
-            this.contentel.innerHTML = this.codeel.value;
+            this.contentel.innerHTML = this.codeel.textContent;
         }
 
         this.codeel.classList[this.codeview ? "add" : "remove"]("visible");
