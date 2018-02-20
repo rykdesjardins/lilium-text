@@ -233,8 +233,7 @@ class LiliumTextCustomCommand extends LiliumTextCommand {
     }
 
     execute() {
-        this.callback(...arguments);
-        this.editor.takeSnapshot();
+        this.callback(...arguments) && this.editor.takeSnapshot();
         return false;
     }
 }
@@ -280,10 +279,8 @@ class LiliumTextHistoryEntry {
             undo(editor) {
                 if (editor.content != this.markup) {
                     editor.content = this.markup;
-                    return this.markup;
+                    return true;
                 }
-
-                return false;
             }
         }
 
@@ -296,10 +293,8 @@ class LiliumTextHistoryEntry {
             undo(editor) {
                 if (editor.content != this.markup) {
                     editor.content = this.markup;
-                    return this.markup;
+                    return true;
                 }
-
-                return false;
             }
         }
     }
@@ -410,7 +405,6 @@ class LiliumText {
 
         this._init();
         this.settings.initrender && this.render(); 
-        this.takeSnapshot();
 
         this.log('Ready in ' + (window.performance.now() - this.initat) + 'ms');
     }
@@ -493,6 +487,7 @@ class LiliumText {
 
     _pushToHistory(entry) {
         this.fire('history', entry);
+        this.log("Pushing new entry to history");
         // Push to history, and remove first element if array is too big
         this._history.mutations.push(entry) > this.settings.maxHistoryStack && this._history.mutations.shift();
         this._history.undoStack = [];
@@ -568,30 +563,36 @@ class LiliumText {
 
     redo() {
         if (this._history.undoStack.length != 0) {
+            this.log('Restoring from undo stack');
             const undoItem = this._history.undoStack.pop();
             this._history.mutations.push(undoItem.mutation);
             this.content = undoItem.markup; 
             this.resetSnapshot();
         }
+
+        return false;
     }
 
     undo() {
-        const mutations = this._history.mutations;
-        if (mutations.length != 0) {
-            let mutation = mutations.pop();
+        if (this._history.mutations.length != 0) {
+            this.log('Going up one state in history');
+            let mutation = this._history.mutations.pop();
             const oldMarkup = this.content;
 
-            const undid = mutation.undo(this);
-            if (!undid && mutations.length != 0) {
-                mutation = mutations.pop();
-                mutation.undo(this);
+            if (mutation.undo(this)) {
+                this.log('Pushing to undo stack');
+                this._history.undoStack.push({ markup : oldMarkup, mutation });
+                this.resetSnapshot();
+                this.fire('undo');
+            } else {
+                return this.undo();
             }
-
-            this._history.undoStack.push({ markup : oldMarkup, mutation });
-            this.resetSnapshot();
+        } else {
+            this.log('Restored original content');
+            this.content = this.settings.content;
         }
 
-        this.fire('undo');
+        return false;
     }
 
     storeRange() {
@@ -697,6 +698,7 @@ class LiliumText {
             mutations : [],
             undoStack : []
         };
+        this._startHistory();
 
         this.fire('init');
         this.log('Initialized object');
@@ -748,6 +750,8 @@ class LiliumText {
 
         this.codeel.classList[this.codeview ? "add" : "remove"]("visible");
         this.contentel.classList[this.codeview ? "add" : "remove"]("invisible");
+
+        return true;
     }
 
     render() {
