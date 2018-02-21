@@ -176,9 +176,17 @@ For reusable logic, it is possible to extend the LiliumTextPlugin virtual class 
 For example.
 ```javascript
 class myPlugin extends LiliumTextPlugin {
+    static get uniqueIdentifier() {
+        return "myPlugin";
+    }
+
     // The constructor receives a single argument : and instance of LiliumText
     constructor(editor) {
-        // I recommend storing a reference to it like so
+        // The super constructor must be called. The only argument is a unique ID typically the class name as a string.
+        // This string will be used to unregister the plugin later. For clarity, let's use a static get.
+        super(myPlugin.uniqueIdentifier)
+
+        // I recommend storing a reference to the editor instance like so
         this.editor = editor;
     }
 
@@ -212,3 +220,8 @@ myEditor.registerPlugin(myPlugin);
 ```
 
 The `register` method overridden by the `myPlugin` class will be called during the initialization if provided as an option of the LiliumText constructor, or when the `registerPlugin` method is called. 
+
+To unregister a plugin, simply call `editorInstance.unregisterPlugin(pluginID)`. In the previous example, we would do the following.
+```javascript
+editor.unregisterPlugin(myPlugin.uniqueIdentifier);
+```

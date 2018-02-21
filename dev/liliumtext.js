@@ -697,6 +697,21 @@ class LiliumText {
         this._plugins.push(pluginInstance);
     }
 
+    unregisterPlugin(id) {
+        let index = -1;
+        const pluginInstance = this._plugins.find((x, i) => {
+            if (x.identifier == id) {
+                index = i;
+                return x;
+            }
+        });
+
+        if (pluginInstance) {
+            pluginInstance && pluginInstance.unregister();
+            this._plugins.splice(index, 1);
+        }
+    }
+
     _init() {
         this.log('Initializing LiliumText instance');
         this.toolbarel = document.createElement('div');
