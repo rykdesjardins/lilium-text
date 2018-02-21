@@ -1,1 +1,1073 @@
-"use strict";var _slicedToArray=function(){function a(a,b){var c=[],d=!0,e=!1,f=void 0;try{for(var g,h=a[Symbol.iterator]();!(d=(g=h.next()).done)&&(c.push(g.value),!(b&&c.length===b));d=!0);}catch(a){e=!0,f=a}finally{try{!d&&h["return"]&&h["return"]()}finally{if(e)throw f}}return c}return function(b,c){if(Array.isArray(b))return b;if(Symbol.iterator in Object(b))return a(b,c);throw new TypeError("Invalid attempt to destructure non-iterable instance")}}(),_createClass=function(){function a(a,b){for(var c,d=0;d<b.length;d++)c=b[d],c.enumerable=c.enumerable||!1,c.configurable=!0,"value"in c&&(c.writable=!0),Object.defineProperty(a,c.key,c)}return function(b,c,d){return c&&a(b.prototype,c),d&&a(b,d),b}}();function _toConsumableArray(a){if(Array.isArray(a)){for(var b=0,c=Array(a.length);b<a.length;b++)c[b]=a[b];return c}return Array.from(a)}function _possibleConstructorReturn(a,b){if(!a)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return b&&("object"==typeof b||"function"==typeof b)?b:a}function _inherits(a,b){if("function"!=typeof b&&null!==b)throw new TypeError("Super expression must either be null or a function, not "+typeof b);a.prototype=Object.create(b&&b.prototype,{constructor:{value:a,enumerable:!1,writable:!0,configurable:!0}}),b&&(Object.setPrototypeOf?Object.setPrototypeOf(a,b):a.__proto__=b)}function _classCallCheck(a,b){if(!(a instanceof b))throw new TypeError("Cannot call a class as a function")}var LiliumTextCommand=function(){function a(){_classCallCheck(this,a)}return _createClass(a,[{key:"execute",value:function execute(){throw new Error("execute() method was not overridden in child class.")}},{key:"make",value:function make(a){var b=this;this.editor=a;var c=document.createElement("i");if(c.className="liliumtext-topbar-command liliumtext-topbar-command-"+this.webName+" "+(this.cssClass||"liliumtext-topbar-noicon"),c.dataset.command=this.webName,this.text){var d=document.createElement("span");d.className="liliumtext-command-text",d.textContent=this.text,c.classList.add("liliumtext-command-withtext"),c.appendChild(d)}return c.addEventListener("click",function(c){a.log("Executed command "+b.webName+(b.param?" with parameter '"+b.param+"'":"")),a.fire("command",b.webName),b.execute(c,b,a)}),c}}]),a}(),LiliumTextWebCommand=function(a){function b(a,c,d,e,f){_classCallCheck(this,b);var g=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this));return g.webName=a,g.param=c,g.cssClass=d,g.imageURL=e,g.text=f,g}return _inherits(b,a),_createClass(b,[{key:"executeText",value:function executeText(){var a=this,b=this.editor.restoreSelection(),c=this.param;if("Caret"==b.type){var n=this.editor.createSelectionContext(b.focusNode),o=n.find(function(a){return a.type==c});if(o){this.editor.log("Unwrapping element of node type "+c);var p=o.element;this.editor.unwrap(p)}}else if("Range"==b.type){var d=b.anchorNode.compareDocumentPosition(b.focusNode)&Node.DOCUMENT_POSITION_FOLLOWING?[b.anchorNode,b.focusNode]:[b.focusNode,b.anchorNode],e=_slicedToArray(d,2),f=e[0],g=e[1],h=[this.editor.createSelectionContext(f),this.editor.createSelectionContext(g)],i=h[0],j=h[1],k=[i.find(function(a){return a.type==c}),j.find(function(a){return a.type==c})],l=k[0],m=k[1];this.editor.log("Long logic with range using node type "+c);var q=b.getRangeAt(0),r=q.extractContents();if("#text"!=r.childNodes[0].nodeName||r.childNodes[0].data.trim()||(this.editor.log("Removed extra empty text node from fragment"),q.insertNode(r.childNodes[0])),f.parentElement===g.parentElement&&!l){this.editor.log("Quick range wrap with element of node type "+c);var s=document.createElement(c);s.appendChild(r),b.getRangeAt(0).insertNode(s)}else if(!l!=!m){this.editor.log("XOR range wrapper extension of node type "+c);var t=document.createElement(c);t.appendChild(r),b.getRangeAt(0).insertNode(t);Array.prototype.forEach.call((l||m).element.querySelectorAll(c),function(b){a.editor.unwrap(b)})}else if(l&&m&&l.element===m.element){this.editor.log("Placeholder unwrap from two sources with node types : "+c);var u=document.createElement("liliumtext-placeholder");b.getRangeAt(0).insertNode(u);var v=l.element,w=v.cloneNode();for(v.parentElement.insertBefore(w,v);v.firstChild!=u;)w.appendChild(v.firstChild);v.parentElement.insertBefore(r,v),u.remove(),this.editor.log("Removing empty trailing <"+c+"> element"),w.textContent.trim()||w.remove(),v.textContent.trim()||v.remove()}else if(l&&m){this.editor.log("Merge wrap from two sources with node types : "+c);for(var x=r.firstChild,y=r.lastChild;x.nextSibling!=y;)x.appendChild(x.nextSibling);for(;rightFrag.firstChild;)leftFrag.appendChild(rightFrag.firstChild);rightFrag.remove(),b.getRangeAt(0).insertNode(r)}else if(1==r.childNodes.length){this.editor.log("Single unwrap of node type : "+c);for(var z=r.childNodes[0];z.lastChild;)b.getRangeAt(0).insertNode(z.lastChild)}else{this.editor.log("Fragment wrap with node type : "+c);var A=document.createElement(c);A.appendChild(r),b.getRangeAt(0).insertNode(A)}}}},{key:"executeExec",value:function executeExec(){this.editor.restoreSelection(),document.execCommand(this.param)}},{key:"executeBlock",value:function executeBlock(){var a=this.editor.restoreSelection(),b=a.getRangeAt(0),c=this.param,d=this.editor.createSelectionContext(a.focusNode),e=this.editor.settings.blockelements,f=d[d.length-1].element;if(f.nodeName!=c){var g=document.createElement(c);if(f.parentElement.insertBefore(g,f),f.data)g.appendChild(f);else{for(;f.firstChild;)g.appendChild(f.firstChild);f.remove()}b.setStart(g,1),b.collapse(!0),a.removeAllRanges(),a.addRange(b)}}},{key:"executeRemove",value:function executeRemove(){var a=this;if(this.param){var b=this.editor.restoreSelection().focusNode.parentElement,c=this.editor.createSelectionContext(b),d=c.find(function(b){return b.type==a.param});d&&(this.editor.log("Unwrapping node "+this.param),this.editor.unwrap(d.element))}else this.editor.log("Executing native command removeFormat"),this.editor.restoreSelection(),document.execCommand("removeFormat",!1,"")}},{key:"executeInsert",value:function executeInsert(){var a=this.param,b=document.createElement(a),c=this.editor.restoreSelection(),d=c.focusNode,e=this.editor.createSelectionContext(d),f=e[e.length-1].element;debugger;this.editor.contentel.insertBefore(b,f.nextElementSibling);var g=c.getRangeAt(0);g.setStart(b.nextElementSibling||f.nextElementSibling||b,0),g.collapse(!0),c.removeAllRanges(),c.addRange(g)}},{key:"execute",value:function execute(a){switch(this.webName){case"text":this.executeText();break;case"exec":this.executeExec();break;case"block":this.executeBlock();break;case"remove":this.executeRemove();break;case"insert":this.executeInsert();break;default:this.editor.log("Warning : Tried to execute command with unknown webName ["+this.webName+"]");}return this.editor.takeSnapshot(),a.stopPropagation(),a.preventDefault(),!1}}]),b}(LiliumTextCommand),LiliumTextCustomCommand=function(a){function b(a,c,d,e,f){_classCallCheck(this,b);var g=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this));return g.webName=a,g.callback=c,g.cssClass=d,g.imageURL=e,g.text=f,g}return _inherits(b,a),_createClass(b,[{key:"execute",value:function execute(){return this.callback.apply(this,arguments)&&this.editor.takeSnapshot(),!1}}]),b}(LiliumTextCommand),LiliumTextHistoryEntry=function(){function a(b){_classCallCheck(this,a),this.type=b}return _createClass(a,[{key:"undo",value:function undo(){}}],[{key:"makeStaticClassesBecauseJavascriptIsStillWeird",value:function makeStaticClassesBecauseJavascriptIsStillWeird(){a.ChildListHistoryEntry=function(a){function b(a){_classCallCheck(this,b);var c=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this,"ChildList"));return c.record=a,c.target=a.target,c.previousState=a.oldValue,c}return _inherits(b,a),b}(a),a.TextHistoryEntry=function(a){function b(a){_classCallCheck(this,b);var c=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this,"Text"));return c.record=a,c}return _inherits(b,a),b}(a),a.AttributesHistoryEntry=function(a){function b(a){_classCallCheck(this,b);var c=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this,"Attributes"));return c.record=a,c}return _inherits(b,a),b}(a),a.AutomaticSnapshotEntry=function(a){function b(a){_classCallCheck(this,b);var c=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this,"AutomaticSnapshot"));return c.markup=a,c}return _inherits(b,a),_createClass(b,[{key:"undo",value:function undo(a){if(a.content!=this.markup)return a.content=this.markup,!0}}]),b}(a),a.ManualSnapshotEntry=function(a){function b(a){_classCallCheck(this,b);var c=_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).call(this,"ManualSnapshot"));return c.markup=a,c}return _inherits(b,a),_createClass(b,[{key:"undo",value:function undo(a){if(a.content!=this.markup)return a.content=this.markup,!0}}]),b}(a)}},{key:"fromRecord",value:function fromRecord(b){switch(b.type){case"childList":return new a.ChildListHistoryEntry(b);case"characterData":return new a.TextHistoryEntry(b);case"attributes":return new a.AttributesHistoryEntry(b);}}},{key:"fromSnapshot",value:function fromSnapshot(b,c){return c?new a.ManualSnapshotEntry(b):new a.AutomaticSnapshotEntry(b)}}]),a}();LiliumTextHistoryEntry.makeStaticClassesBecauseJavascriptIsStillWeird();var LiliumTextPlugin=function(){function a(b){_classCallCheck(this,a),this.identifier=b,this.active=!1}return _createClass(a,[{key:"register",value:function register(){}},{key:"unregister",value:function unregister(){}}]),a}(),LiliumText=function(){function a(b){var c=this,d=1<arguments.length&&void 0!==arguments[1]?arguments[1]:{};if(_classCallCheck(this,a),this.initat=window.performance.now(),this.initialized=!1,this.destroyed=!1,this.codeview=!1,this.focused=!1,this._historylastState="",this.hooks={},this._plugins=[],this.wrapperel="string"==typeof b?document.querySelector(b)||document.getElementById(b):b,!this.wrapperel)throw new Error("LiliumText - Invalid element, DOM selector, or DOM element ID.");this.id=this.wrapperel.id||"liliumtext-"+btoa(Math.random().toString()).slice(0,-2),a.instances[this.id]=this,this.settings=Object.assign(a.defaultSettings,d),this.commandsets=this.settings.commandsets||a.createDefaultCommands(this),this.log=this.settings.dev?a.makeLogFunction():function(){},this.log("Created LiliumText instance"),this.log("Firing document event"),document.dispatchEvent(new CustomEvent("liliumTextCreated",{detail:this})),this.wrapperel.classList.add("liliumtext"),this.wrapperel.classList.add("theme-"+this.settings.theme),Object.keys(this.settings.hooks).forEach(function(a){c.bind(a,c.settings.hooks[a])}),this._init(),this.settings.initrender&&this.render(),this.log("Ready in "+(window.performance.now()-this.initat)+"ms")}return _createClass(a,null,[{key:"createDefaultCommands",value:function createDefaultCommands(a){return[[new LiliumTextWebCommand("text",a.settings.boldnode||"strong","far fa-bold"),new LiliumTextWebCommand("text",a.settings.italicnode||"em","far fa-italic"),new LiliumTextWebCommand("text",a.settings.underlinenode||"u","far fa-underline"),new LiliumTextWebCommand("text",a.settings.strikenode||"strike","far fa-strikethrough"),new LiliumTextWebCommand("remove",void 0,"far fa-eraser")],[new LiliumTextCustomCommand("undo",a.undo.bind(a),"far fa-undo"),new LiliumTextCustomCommand("redo",a.redo.bind(a),"far fa-redo")],[new LiliumTextWebCommand("block",a.settings.breaktag||"p","far fa-paragraph"),new LiliumTextWebCommand("block","h1","far fa-h1"),new LiliumTextWebCommand("block","h2","far fa-h2"),new LiliumTextWebCommand("block","h3","far fa-h3"),new LiliumTextWebCommand("block","blockquote","far fa-quote-right")],[new LiliumTextWebCommand("insert","hr","far fa-minus")],[new LiliumTextWebCommand("exec","insertOrderedList","far fa-list-ol"),new LiliumTextWebCommand("exec","insertUnorderedList","far fa-list-ul"),new LiliumTextWebCommand("remove","a","far fa-unlink")],[new LiliumTextCustomCommand("code",a.toggleCode.bind(a),"far fa-code")]]}},{key:"makeLogFunction",value:function makeLogFunction(){return function(a){return console.log("[LiliumText] "+a)}}},{key:"defaultSettings",get:function get(){return{initrender:!0,removepastedstyles:!0,dev:!1,hooks:{},plugins:[],theme:"minim",width:"auto",boldnode:"strong",italicnode:"em",historyInterval:5e3,maxHistoryStack:100,underlinenode:"u",strikenode:"strike",height:"420px",breaktag:"p",blockelements:["p","h1","h2","h3","h4","h5","h6","blockquote","pre","ol","ul","article","dd","dl","dt","figure","header","hr","main","section","table","tfoot"],inlineelements:["a","b","big","code","em","i","img","small","span","strong","sub","sup","time","var"],content:"",urldetection:/^((https?):\/)\/?([^:\/\s]+)((\/\w+)*\/?)([\w\-\.])+/i}}}]),_createClass(a,[{key:"destroy",value:function destroy(b){for(this.fire("destroy");this.wrapperel.firstElementChild;)this.wrapperel.firstElementChild.remove();for(var c in b?delete a.instances[this.id]:a.instances[this.id]=void 0,this)this[c]=void 0;this.destroyed=!0,document.dispatchEvent(new CustomEvent("liliumTextDestroyed",{detail:this}))}},{key:"lock",value:function lock(){this.contentel.removeAttribute("contenteditable")}},{key:"unlock",value:function unlock(){this.contentel.contentEditable=!0}},{key:"createSelectionContext",value:function createSelectionContext(a){for(var b=[];a!=this.contentel&&a;)b.push({type:a.nodeName.toLowerCase().replace("#",""),element:a}),a=a.parentNode;return context}},{key:"selectWord",value:function selectWord(a){var b=document.createRange();b.setStart(a.anchorNode,a.anchorOffset),b.setEnd(a.focusNode,a.focusOffset);var c=b.collapsed;b.detach();var d=a.focusNode,e=a.focusOffset;a.collapse(a.anchorNode,a.anchorOffset);var f=c?["backward","forward"]:["forward","backward"];a.modify("move",f[0],"character"),a.modify("move",f[1],"word"),a.extend(d,e),a.modify("extend",f[1],"character"),a.modify("extend",f[0],"word")}},{key:"selectParent",value:function selectParent(a,b){var c=document.createRange();c.selectNode(b||a.focusNode.parentNode),window.getSelection().removeAllRanges(),window.getSelection().addRange(c)}},{key:"unwrap",value:function unwrap(a){for(var b=a.parentElement;a.firstChild;)b.insertBefore(a.firstChild,a);a.remove()}},{key:"_pushToHistory",value:function _pushToHistory(a){this.fire("history",a),this.log("Pushing new entry to history"),this._history.mutations.push(a)>this.settings.maxHistoryStack&&this._history.mutations.shift(),this._history.undoStack=[]}},{key:"_observe",value:function _observe(a){var b=this;a.forEach(function(a){return b._pushToHistory(LiliumTextHistoryEntry.fromRecord(a))})}},{key:"_takeSnapshot",value:function _takeSnapshot(a){this.contentel.innerHTML!=this._historylastState&&(this._historylastState=this.contentel.innerHTML,this._pushToHistory(LiliumTextHistoryEntry.fromSnapshot(this._historylastState,a)))}},{key:"_startHistory",value:function _startHistory(){var a=this;this.snapshotTimerID=setInterval(function(){a._takeSnapshot()},this.settings.historyInterval)}},{key:"resetSnapshot",value:function resetSnapshot(){this.snapshotTimerID&&clearInterval(this.snapshotTimerID),this._startHistory()}},{key:"takeSnapshot",value:function takeSnapshot(){this.resetSnapshot(),this._takeSnapshot(!0)}},{key:"isRangeInEditor",value:function isRangeInEditor(a){return a&&a.startContainer.compareDocumentPosition(this.contentel)&Node.DOCUMENT_POSITION_CONTAINS}},{key:"insert",value:function insert(a){var b=this.restoreSelection(),c=this.getRange();this.isRangeInEditor(c)||(this.contentel.focus(),c=this.storeRange()),c.insertNode(a),c.setStartAfter(a),b.removeAllRanges(),b.addRange(c)}},{key:"_focused",value:function _focused(){var a=this.fire("focus");this.focused=!0,a&&a.includes(!1)||(this._tempSelection=void 0,this._tempRange=void 0,document.execCommand("defaultParagraphSeparator",!1,this.settings.breaktag))}},{key:"_clicked",value:function _clicked(a){var b=window.getSelection(),c=this.createSelectionContext(b.focusNode),d=b.focusNode.parentElement;this.fire("clicked",{context:c,event:a,selection:b,element:d})}},{key:"redo",value:function redo(){if(0!=this._history.undoStack.length){this.log("Restoring from undo stack");var a=this._history.undoStack.pop();this._history.mutations.push(a.mutation),this.content=a.markup,this.resetSnapshot(),this.fire("redo")}return!1}},{key:"undo",value:function undo(){if(0!=this._history.mutations.length){this.log("Going up one state in history");var a=this._history.mutations.pop(),b=this.content;if(a.undo(this))this.log("Pushing to undo stack"),this._history.undoStack.push({markup:b,mutation:a}),this.resetSnapshot(),this.fire("undo");else return this.undo()}else this.log("Restored original content"),this.content=this.settings.content;return!1}},{key:"storeRange",value:function storeRange(){var a=window.getSelection();return a.focusNode&&(this._tempRange=a.getRangeAt(0).cloneRange()),this._tempRange}},{key:"restoreSelection",value:function restoreSelection(){var a=window.getSelection();return this.focused||(a.removeAllRanges(),a.addRange(this.getRange())),a}},{key:"getRange",value:function getRange(){return this._tempRange||this.storeRange()}},{key:"_blurred",value:function _blurred(){this.focused=!1,this.storeRange(),this.fire("blur")}},{key:"_keydown",value:function _keydown(a){if((a.ctrlKey||a.metaKey)&&"z"==String.fromCharCode(a.which).toLowerCase())return a.preventDefault(),this.undo(),!1}},{key:"_pasted",value:function _pasted(a){var b=a.clipboardData||window.clipboardData,c=this.fire("paste",b);if(!(c&&c.includes(!1)))if(b.types.includes("text/html")){a.stopPropagation(),a.preventDefault();var d=b.getData("text/html"),e=document.createElement("div");e.innerHTML=d,this.settings.removepastedstyles&&(Array.prototype.forEach.call(e.querySelectorAll("*"),function(a){return a.removeAttribute("style")}),Array.prototype.forEach.call(e.querySelectorAll("style"),function(a){return a.remove()})),document.execCommand("insertHTML",!1,e.innerHTML)}else{var f=b.getData("text");this.settings.urldetection.exec(f)&&(a.stopPropagation(),a.preventDefault(),document.execCommand("createLink",!1,f))}}},{key:"_registerAllPlugins",value:function _registerAllPlugins(){var a=this;this.settings.plugins&&this.settings.plugins.forEach(function(b){return a.registerPlugin(b)})}},{key:"registerPlugin",value:function registerPlugin(a){var b=new a(this);this.log("Registering plugin with id "+b.identifier),b.register(),this._plugins.push(b)}},{key:"unregisterPlugin",value:function unregisterPlugin(a){var b=-1,c=this._plugins.find(function(c,d){if(c.identifier==a)return b=d,c});c&&(c&&c.unregister(),this._plugins.splice(b,1))}},{key:"_init",value:function _init(){this.log("Initializing LiliumText instance"),this.toolbarel=document.createElement("div"),this.toolbarel.className="liliumtext-topbar",this.contentel=document.createElement("div"),this.contentel.contentEditable=!0,this.contentel.className="liliumtext-editor",this.codeel=document.createElement("pre"),this.codeel.contentEditable=!0,this.codeel.className="liliumtext-code",this.wrapperel.appendChild(this.toolbarel),this.wrapperel.appendChild(this.contentel),this.wrapperel.appendChild(this.codeel),this.settings.content&&this.settings.initrender?this.contentel.innerHTML=this.settings.content:this.contentel.appendChild(document.createElement(this.settings.breaktag)),this.contentel.addEventListener("paste",this.settings.onpaste||this._pasted.bind(this)),this.contentel.addEventListener("focus",this._focused.bind(this)),this.contentel.addEventListener("blur",this._blurred.bind(this)),this.contentel.addEventListener("click",this._clicked.bind(this)),this.contentel.addEventListener("keydown",this._keydown.bind(this)),this._history={mutations:[],undoStack:[]},this._startHistory(),this._registerAllPlugins(),this.fire("init"),this.log("Initialized LiliumText instance"),this.initialized=!0}},{key:"createCommandSet",value:function createCommandSet(){var a=0<arguments.length&&void 0!==arguments[0]?arguments[0]:[],b=arguments[1],c=!(2<arguments.length&&void 0!==arguments[2])||arguments[2];-1===b?this.commandsets=[a].concat(_toConsumableArray(this.commandsets)):b<this.commandsets.length?this.commandsets=[].concat(_toConsumableArray(this.commandsets.slice(0,b)),[a],_toConsumableArray(this.commandsets.slice(b))):this.commandsets.push(a),c&&this.render()}},{key:"addCommand",value:function addCommand(a){var b=1<arguments.length&&void 0!==arguments[1]?arguments[1]:this.commandsets.length-1,c=!(2<arguments.length&&void 0!==arguments[2])||arguments[2],d=this.commandsets[b];d?d.push(a):this.commandsets.push([a]),c&&this.render()}},{key:"bind",value:function bind(a,b){this.hooks[a]?this.hooks[a].push(b):this.hooks[a]=[b]}},{key:"fire",value:function fire(a,b){var c=this;return this.hooks[a]&&this.hooks[a].map(function(a){return a(c,b)})}},{key:"toggleCode",value:function toggleCode(){return this.log("Toggled code view"),this.codeview=!this.codeview,this.codeview?this.codeel.textContent=this.contentel.innerHTML:this.contentel.innerHTML=this.codeel.textContent,this.codeel.classList[this.codeview?"add":"remove"]("visible"),this.contentel.classList[this.codeview?"add":"remove"]("invisible"),this.fire("code",this.codeview),!0}},{key:"render",value:function render(){var a=this;this.log("Rendering LiliumText instance"),this.fire("willrender"),this.log("Clearing toolbar"),this.toolbarel.firstElementChild&&this.toolbarel.firstElementChild.remove(),this.log("Rendering toolbar");var b=document.createElement("div");b.className="liliumtext-commands",this.commandsets.forEach(function(c){var d=document.createElement("div");d.className="liliumtext-commandset",b.appendChild(d),c.forEach(function(b){d.appendChild(b.make(a))})}),this.contentel.style.height=this.settings.height,this.codeel.style.height=this.settings.height,this.wrapperel.style.width=this.settings.width,this.toolbarel.appendChild(b),this.fire("render"),this.log("Done rendering")}},{key:"toString",value:function toString(){return this.content}},{key:"describe",value:function describe(){var a=this;return this.settings.dev?"[Development LiliumText Editor instance] Wraps DOM element with ID "+(this.wrapperel.id||"[No ID]")+". This instance currently has "+Object.keys(this.hooks).reduce(function(b,c){return b+a.hooks[c].length},0)+" event hooks.":"[LiliumText Editor]"}},{key:"content",set:function set(a){var b={markup:a};this.fire("set",b),this.contentel.innerHTML=b.markup},get:function get(){var a={markup:this.contentel.innerHTML},b=this.fire("get",a);return a.markup}}]),a}();LiliumText.instances={},"undefined"!=typeof module&&(module.exports={LiliumText:LiliumText,LiliumTextCustomCommand:LiliumTextCustomCommand,LiliumTextWebCommand:LiliumTextWebCommand,LiliumTextCommand:LiliumTextCommand,LiliumTextPlugin:LiliumTextPlugin});
+"use strict";
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var LiliumTextCommand = function () {
+    function LiliumTextCommand() {
+        _classCallCheck(this, LiliumTextCommand);
+    }
+
+    _createClass(LiliumTextCommand, [{
+        key: "execute",
+        value: function execute() {
+            throw new Error("execute() method was not overridden in child class.");
+        }
+    }, {
+        key: "make",
+        value: function make(editor) {
+            var _this = this;
+
+            this.editor = editor;
+            var el = document.createElement("i");
+            el.className = "liliumtext-topbar-command liliumtext-topbar-command-" + this.webName + " " + (this.cssClass || "liliumtext-topbar-noicon");
+            el.dataset.command = this.webName;
+
+            if (this.text) {
+                var txt = document.createElement('span');
+                txt.className = "liliumtext-command-text";
+                txt.textContent = this.text;
+
+                el.classList.add("liliumtext-command-withtext");
+                el.appendChild(txt);
+            }
+
+            el.addEventListener('click', function (ev) {
+                editor.log('Executed command ' + _this.webName + (_this.param ? " with parameter '" + _this.param + "'" : ''));
+                editor.fire('command', _this.webName);
+                _this.execute(ev, _this, editor);
+            });
+
+            return el;
+        }
+    }]);
+
+    return LiliumTextCommand;
+}();
+
+var LiliumTextWebCommand = function (_LiliumTextCommand) {
+    _inherits(LiliumTextWebCommand, _LiliumTextCommand);
+
+    function LiliumTextWebCommand(webName, param, cssClass, imageURL, text) {
+        _classCallCheck(this, LiliumTextWebCommand);
+
+        var _this2 = _possibleConstructorReturn(this, (LiliumTextWebCommand.__proto__ || Object.getPrototypeOf(LiliumTextWebCommand)).call(this));
+
+        _this2.webName = webName;
+        _this2.param = param;
+        _this2.cssClass = cssClass;
+        _this2.imageURL = imageURL;
+        _this2.text = text;
+        return _this2;
+    }
+
+    _createClass(LiliumTextWebCommand, [{
+        key: "executeText",
+        value: function executeText() {
+            var _this3 = this;
+
+            var selection = this.editor.restoreSelection();
+            var nodetype = this.param;
+
+            if (selection.type == "Caret") {
+                var context = this.editor.createSelectionContext(selection.focusNode);
+                var maybeCtxElem = context.find(function (x) {
+                    return x.type == nodetype;
+                });
+                if (maybeCtxElem) {
+                    this.editor.log('Unwrapping element of node type ' + nodetype);
+                    var el = maybeCtxElem.element;
+                    this.editor.unwrap(el);
+                }
+            } else if (selection.type == "Range") {
+                var _ref = selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING ? [selection.anchorNode, selection.focusNode] : [selection.focusNode, selection.anchorNode],
+                    _ref2 = _slicedToArray(_ref, 2),
+                    left = _ref2[0],
+                    right = _ref2[1];
+
+                var _ref3 = [this.editor.createSelectionContext(left), this.editor.createSelectionContext(right)],
+                    leftCtx = _ref3[0],
+                    rightCtx = _ref3[1];
+                var _ref4 = [leftCtx.find(function (x) {
+                    return x.type == nodetype;
+                }), rightCtx.find(function (x) {
+                    return x.type == nodetype;
+                })],
+                    leftExistWrap = _ref4[0],
+                    rightExistWrap = _ref4[1];
+
+                // Fun! :D
+
+                this.editor.log("Long logic with range using node type " + nodetype);
+
+                var range = selection.getRangeAt(0);
+                var frag = range.extractContents();
+
+                if (frag.childNodes[0].nodeName == "#text" && !frag.childNodes[0].data.trim()) {
+                    this.editor.log("Removed extra empty text node from fragment");
+                    range.insertNode(frag.childNodes[0]);
+                }
+
+                if (left.parentElement === right.parentElement && !leftExistWrap) {
+                    this.editor.log("Quick range wrap with element of node type " + nodetype);
+                    var newElem = document.createElement(nodetype);
+                    newElem.appendChild(frag);
+                    selection.getRangeAt(0).insertNode(newElem);
+                } else if (!leftExistWrap != !rightExistWrap) {
+                    // Apparently there is no XOR in Javascript, so here's a syntax monstrosity
+                    // This will not execute the block unless one is truthy and one is falsey
+                    this.editor.log('XOR range wrapper extension of node type ' + nodetype);
+
+                    var _newElem = document.createElement(nodetype);
+                    _newElem.appendChild(frag);
+                    selection.getRangeAt(0).insertNode(_newElem);
+
+                    // Extend existing wrapper
+                    var wrapper = leftExistWrap || rightExistWrap;
+                    Array.prototype.forEach.call(wrapper.element.querySelectorAll(nodetype), function (node) {
+                        _this3.editor.unwrap(node);
+                    });
+                } else if (leftExistWrap && rightExistWrap && leftExistWrap.element === rightExistWrap.element) {
+                    // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
+                    this.editor.log("Placeholder unwrap from two sources with node types : " + nodetype);
+                    var placeholder = document.createElement('liliumtext-placeholder');
+                    selection.getRangeAt(0).insertNode(placeholder);
+
+                    var leftEl = leftExistWrap.element;
+                    var clone = leftEl.cloneNode();
+                    leftEl.parentElement.insertBefore(clone, leftEl);
+
+                    while (leftEl.firstChild != placeholder) {
+                        clone.appendChild(leftEl.firstChild);
+                    }
+
+                    leftEl.parentElement.insertBefore(frag, leftEl);
+                    placeholder.remove();
+
+                    this.editor.log('Removing empty trailing <' + nodetype + '> element');
+                    !clone.textContent.trim() && clone.remove();
+                    !leftEl.textContent.trim() && leftEl.remove();
+                } else if (leftExistWrap && rightExistWrap) {
+                    this.editor.log("Merge wrap from two sources with node types : " + nodetype);
+                    // Merge wrap
+                    var leftFrag = frag.firstChild;
+                    var rightFrag = frag.lastChild;
+                    while (leftFrag.nextSibling != rightFrag) {
+                        leftFrag.appendChild(leftFrag.nextSibling);
+                    }
+
+                    while (rightFrag.firstChild) {
+                        leftFrag.appendChild(rightFrag.firstChild);
+                    }
+
+                    rightFrag.remove();
+                    selection.getRangeAt(0).insertNode(frag);
+                } else if (frag.childNodes.length == 1) {
+                    // Entire element is selected, Unwrap entire element
+                    this.editor.log("Single unwrap of node type : " + nodetype);
+                    var wrap = frag.childNodes[0];
+                    while (wrap.lastChild) {
+                        selection.getRangeAt(0).insertNode(wrap.lastChild);
+                    }
+                } else {
+                    // Create new element, insert before selection
+                    this.editor.log("Fragment wrap with node type : " + nodetype);
+                    var _newElem2 = document.createElement(nodetype);
+                    _newElem2.appendChild(frag);
+                    selection.getRangeAt(0).insertNode(_newElem2);
+                }
+            }
+        }
+    }, {
+        key: "executeExec",
+        value: function executeExec() {
+            this.editor.restoreSelection();
+            document.execCommand(this.param);
+        }
+    }, {
+        key: "executeBlock",
+        value: function executeBlock() {
+            var selection = this.editor.restoreSelection();
+            var range = selection.getRangeAt(0);
+            var nodetype = this.param;
+            var context = this.editor.createSelectionContext(selection.focusNode);
+            var blocktags = this.editor.settings.blockelements;
+
+            var topLevelTag = context[context.length - 1].element;
+
+            if (topLevelTag.nodeName != nodetype) {
+                var newNode = document.createElement(nodetype);
+                topLevelTag.parentElement.insertBefore(newNode, topLevelTag);
+
+                if (topLevelTag.data) {
+                    newNode.appendChild(topLevelTag);
+                } else {
+                    while (topLevelTag.firstChild) {
+                        newNode.appendChild(topLevelTag.firstChild);
+                    }
+
+                    topLevelTag.remove();
+                }
+
+                range.setStart(newNode, 1);
+                range.collapse(true);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+    }, {
+        key: "executeRemove",
+        value: function executeRemove() {
+            var _this4 = this;
+
+            if (this.param) {
+                var el = this.editor.restoreSelection().focusNode.parentElement;
+                var context = this.editor.createSelectionContext(el);
+
+                var wrapperCtx = context.find(function (x) {
+                    return x.type == _this4.param;
+                });
+                if (wrapperCtx) {
+                    this.editor.log('Unwrapping node ' + this.param);
+                    this.editor.unwrap(wrapperCtx.element);
+                }
+            } else {
+                this.editor.log('Executing native command removeFormat');
+                this.editor.restoreSelection();
+                document.execCommand('removeFormat', false, "");
+            }
+        }
+    }, {
+        key: "executeInsert",
+        value: function executeInsert() {
+            var nodetype = this.param;
+            var newNode = document.createElement(nodetype);
+
+            var selection = this.editor.restoreSelection();
+            var el = selection.focusNode;
+            var context = this.editor.createSelectionContext(el);
+            var topLevelEl = context[context.length - 1].element;
+
+            this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
+
+            var range = selection.getRangeAt(0);
+            range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
+            range.collapse(true);
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }, {
+        key: "execute",
+        value: function execute(ev) {
+            switch (this.webName) {
+                case "text":
+                    this.executeText();break;
+                case "exec":
+                    this.executeExec();break;
+                case "block":
+                    this.executeBlock();break;
+                case "remove":
+                    this.executeRemove();break;
+                case "insert":
+                    this.executeInsert();break;
+
+                // Default is noOp, but display warning for easier debugging
+                default:
+                    this.editor.log("Warning : Tried to execute command with unknown webName [" + this.webName + "]");
+            }
+
+            this.editor.takeSnapshot();
+
+            ev.stopPropagation();
+            ev.preventDefault();
+            return false;
+        }
+    }]);
+
+    return LiliumTextWebCommand;
+}(LiliumTextCommand);
+
+var LiliumTextCustomCommand = function (_LiliumTextCommand2) {
+    _inherits(LiliumTextCustomCommand, _LiliumTextCommand2);
+
+    function LiliumTextCustomCommand(id, callback, cssClass, imageURL, text) {
+        _classCallCheck(this, LiliumTextCustomCommand);
+
+        var _this5 = _possibleConstructorReturn(this, (LiliumTextCustomCommand.__proto__ || Object.getPrototypeOf(LiliumTextCustomCommand)).call(this));
+
+        _this5.webName = id;
+        _this5.callback = callback;
+        _this5.cssClass = cssClass;
+        _this5.imageURL = imageURL;
+        _this5.text = text;
+        return _this5;
+    }
+
+    _createClass(LiliumTextCustomCommand, [{
+        key: "execute",
+        value: function execute() {
+            this.callback.apply(this, arguments) && this.editor.takeSnapshot();
+            return false;
+        }
+    }]);
+
+    return LiliumTextCustomCommand;
+}(LiliumTextCommand);
+
+var LiliumTextHistoryEntry = function () {
+    function LiliumTextHistoryEntry(type) {
+        _classCallCheck(this, LiliumTextHistoryEntry);
+
+        this.type = type;
+    }
+
+    _createClass(LiliumTextHistoryEntry, [{
+        key: "undo",
+        value: function undo() {}
+    }], [{
+        key: "makeStaticClassesBecauseJavascriptIsStillWeird",
+        value: function makeStaticClassesBecauseJavascriptIsStillWeird() {
+            // Create nested static classes
+            LiliumTextHistoryEntry.ChildListHistoryEntry = function (_LiliumTextHistoryEnt) {
+                _inherits(ChildListHistoryEntry, _LiliumTextHistoryEnt);
+
+                function ChildListHistoryEntry(record) {
+                    _classCallCheck(this, ChildListHistoryEntry);
+
+                    var _this6 = _possibleConstructorReturn(this, (ChildListHistoryEntry.__proto__ || Object.getPrototypeOf(ChildListHistoryEntry)).call(this, "ChildList"));
+
+                    _this6.record = record;
+                    _this6.target = record.target;
+                    _this6.previousState = record.oldValue;
+                    return _this6;
+                }
+
+                return ChildListHistoryEntry;
+            }(LiliumTextHistoryEntry);
+
+            LiliumTextHistoryEntry.TextHistoryEntry = function (_LiliumTextHistoryEnt2) {
+                _inherits(TextHistoryEntry, _LiliumTextHistoryEnt2);
+
+                function TextHistoryEntry(record) {
+                    _classCallCheck(this, TextHistoryEntry);
+
+                    var _this7 = _possibleConstructorReturn(this, (TextHistoryEntry.__proto__ || Object.getPrototypeOf(TextHistoryEntry)).call(this, "Text"));
+
+                    _this7.record = record;
+                    return _this7;
+                }
+
+                return TextHistoryEntry;
+            }(LiliumTextHistoryEntry);
+
+            LiliumTextHistoryEntry.AttributesHistoryEntry = function (_LiliumTextHistoryEnt3) {
+                _inherits(AttributesHistoryEntry, _LiliumTextHistoryEnt3);
+
+                function AttributesHistoryEntry(record) {
+                    _classCallCheck(this, AttributesHistoryEntry);
+
+                    var _this8 = _possibleConstructorReturn(this, (AttributesHistoryEntry.__proto__ || Object.getPrototypeOf(AttributesHistoryEntry)).call(this, "Attributes"));
+
+                    _this8.record = record;
+                    return _this8;
+                }
+
+                return AttributesHistoryEntry;
+            }(LiliumTextHistoryEntry);
+
+            LiliumTextHistoryEntry.AutomaticSnapshotEntry = function (_LiliumTextHistoryEnt4) {
+                _inherits(AutomaticSnapshotEntry, _LiliumTextHistoryEnt4);
+
+                function AutomaticSnapshotEntry(state) {
+                    _classCallCheck(this, AutomaticSnapshotEntry);
+
+                    var _this9 = _possibleConstructorReturn(this, (AutomaticSnapshotEntry.__proto__ || Object.getPrototypeOf(AutomaticSnapshotEntry)).call(this, "AutomaticSnapshot"));
+
+                    _this9.markup = state;
+                    return _this9;
+                }
+
+                _createClass(AutomaticSnapshotEntry, [{
+                    key: "undo",
+                    value: function undo(editor) {
+                        if (editor.content != this.markup) {
+                            editor.content = this.markup;
+                            return true;
+                        }
+                    }
+                }]);
+
+                return AutomaticSnapshotEntry;
+            }(LiliumTextHistoryEntry);
+
+            LiliumTextHistoryEntry.ManualSnapshotEntry = function (_LiliumTextHistoryEnt5) {
+                _inherits(ManualSnapshotEntry, _LiliumTextHistoryEnt5);
+
+                function ManualSnapshotEntry(state) {
+                    _classCallCheck(this, ManualSnapshotEntry);
+
+                    var _this10 = _possibleConstructorReturn(this, (ManualSnapshotEntry.__proto__ || Object.getPrototypeOf(ManualSnapshotEntry)).call(this, "ManualSnapshot"));
+
+                    _this10.markup = state;
+                    return _this10;
+                }
+
+                _createClass(ManualSnapshotEntry, [{
+                    key: "undo",
+                    value: function undo(editor) {
+                        if (editor.content != this.markup) {
+                            editor.content = this.markup;
+                            return true;
+                        }
+                    }
+                }]);
+
+                return ManualSnapshotEntry;
+            }(LiliumTextHistoryEntry);
+        }
+    }, {
+        key: "fromRecord",
+        value: function fromRecord(record) {
+            switch (record.type) {
+                case "childList":
+                    return new LiliumTextHistoryEntry.ChildListHistoryEntry(record);
+                case "characterData":
+                    return new LiliumTextHistoryEntry.TextHistoryEntry(record);
+                case "attributes":
+                    return new LiliumTextHistoryEntry.AttributesHistoryEntry(record);
+            }
+        }
+    }, {
+        key: "fromSnapshot",
+        value: function fromSnapshot(markup, manual) {
+            return manual ? new LiliumTextHistoryEntry.ManualSnapshotEntry(markup) : new LiliumTextHistoryEntry.AutomaticSnapshotEntry(markup);
+        }
+    }]);
+
+    return LiliumTextHistoryEntry;
+}();
+
+LiliumTextHistoryEntry.makeStaticClassesBecauseJavascriptIsStillWeird();
+
+var LiliumTextPlugin = function () {
+    function LiliumTextPlugin(identifier) {
+        _classCallCheck(this, LiliumTextPlugin);
+
+        this.identifier = identifier;
+        this.active = false;
+    }
+
+    _createClass(LiliumTextPlugin, [{
+        key: "register",
+        value: function register() {}
+    }, {
+        key: "unregister",
+        value: function unregister() {}
+    }]);
+
+    return LiliumTextPlugin;
+}();
+
+var LiliumText = function () {
+    _createClass(LiliumText, null, [{
+        key: "createDefaultCommands",
+        value: function createDefaultCommands(editor) {
+            return [[new LiliumTextWebCommand('text', editor.settings.boldnode || "strong", "far fa-bold"), new LiliumTextWebCommand('text', editor.settings.italicnode || "em", "far fa-italic"), new LiliumTextWebCommand('text', editor.settings.underlinenode || "u", "far fa-underline"), new LiliumTextWebCommand('text', editor.settings.strikenode || "strike", "far fa-strikethrough"), new LiliumTextWebCommand('remove', undefined, "far fa-eraser")], [new LiliumTextCustomCommand('undo', editor.undo.bind(editor), 'far fa-undo'), new LiliumTextCustomCommand('redo', editor.redo.bind(editor), 'far fa-redo')], [new LiliumTextWebCommand('block', editor.settings.breaktag || 'p', 'far fa-paragraph'), new LiliumTextWebCommand("block", "h1", "far fa-h1"), new LiliumTextWebCommand("block", "h2", "far fa-h2"), new LiliumTextWebCommand("block", "h3", "far fa-h3"), new LiliumTextWebCommand("block", "blockquote", "far fa-quote-right")], [new LiliumTextWebCommand('insert', 'hr', 'far fa-minus')], [new LiliumTextWebCommand('exec', "insertOrderedList", "far fa-list-ol"), new LiliumTextWebCommand('exec', "insertUnorderedList", "far fa-list-ul"), new LiliumTextWebCommand('remove', 'a', 'far fa-unlink')], [new LiliumTextCustomCommand("code", editor.toggleCode.bind(editor), "far fa-code")]];
+        }
+    }, {
+        key: "makeLogFunction",
+        value: function makeLogFunction() {
+            return function (str) {
+                return console.log("[LiliumText] " + str);
+            };
+        }
+    }, {
+        key: "defaultSettings",
+        get: function get() {
+            return {
+                initrender: true,
+                removepastedstyles: true,
+                dev: false,
+                hooks: {},
+                plugins: [],
+                theme: "minim",
+                width: "auto",
+                boldnode: "strong",
+                italicnode: "em",
+                historyInterval: 5000,
+                maxHistoryStack: 100,
+                underlinenode: "u",
+                strikenode: "strike",
+                height: "420px",
+                breaktag: "p",
+                blockelements: ["p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "ol", "ul", "article", "dd", "dl", "dt", "figure", "header", "hr", "main", "section", "table", "tfoot"],
+                inlineelements: ["a", "b", "big", "code", "em", "i", "img", "small", "span", "strong", "sub", "sup", "time", "var"],
+                content: "",
+                urldetection: /^((https?):\/)\/?([^:\/\s]+)((\/\w+)*\/?)([\w\-\.])+/i
+            };
+        }
+    }]);
+
+    function LiliumText(nameOrElem) {
+        var _this11 = this;
+
+        var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+        _classCallCheck(this, LiliumText);
+
+        this.initat = window.performance.now();
+        this.initialized = false;
+        this.destroyed = false;
+        this.codeview = false;
+        this.focused = false;
+        this._historylastState = "";
+        this.hooks = {};
+        this._plugins = [];
+
+        this.wrapperel = typeof nameOrElem == "string" ? document.querySelector(nameOrElem) || document.getElementById(nameOrElem) : nameOrElem;
+        if (!this.wrapperel) {
+            throw new Error("LiliumText - Invalid element, DOM selector, or DOM element ID.");
+        }
+
+        this.id = this.wrapperel.id || "liliumtext-" + btoa(Math.random().toString()).slice(0, -2);
+        LiliumText.instances[this.id] = this;
+
+        this.settings = Object.assign(LiliumText.defaultSettings, settings);
+        this.commandsets = this.settings.commandsets || LiliumText.createDefaultCommands(this);
+        this.log = this.settings.dev ? LiliumText.makeLogFunction() : function () {};
+        this.log('Created LiliumText instance');
+
+        this.log('Firing document event');
+        document.dispatchEvent(new CustomEvent("liliumTextCreated", { detail: this }));
+
+        this.wrapperel.classList.add('liliumtext');
+        this.wrapperel.classList.add('theme-' + this.settings.theme);
+        Object.keys(this.settings.hooks).forEach(function (ev) {
+            _this11.bind(ev, _this11.settings.hooks[ev]);
+        });
+
+        this._init();
+        this.settings.initrender && this.render();
+
+        this.log('Ready in ' + (window.performance.now() - this.initat) + 'ms');
+    }
+
+    _createClass(LiliumText, [{
+        key: "destroy",
+        value: function destroy(fulldelete) {
+            this.fire('destroy');
+            while (this.wrapperel.firstElementChild) {
+                this.wrapperel.firstElementChild.remove();
+            }
+
+            if (fulldelete) {
+                delete LiliumText.instances[this.id];
+            } else {
+                LiliumText.instances[this.id] = undefined;
+            }
+
+            for (var k in this) {
+                this[k] = undefined;
+            }
+
+            this.destroyed = true;
+            document.dispatchEvent(new CustomEvent("liliumTextDestroyed", { detail: this }));
+        }
+    }, {
+        key: "lock",
+        value: function lock() {
+            this.contentel.removeAttribute('contenteditable');
+        }
+    }, {
+        key: "unlock",
+        value: function unlock() {
+            this.contentel.contentEditable = true;
+        }
+    }, {
+        key: "createSelectionContext",
+        value: function createSelectionContext(elem) {
+            var context = [];
+
+            while (elem != this.contentel && elem) {
+                context.push({ type: elem.nodeName.toLowerCase().replace('#', ''), element: elem });
+                elem = elem.parentNode;
+            }
+
+            return context;
+        }
+    }, {
+        key: "selectWord",
+        value: function selectWord(sel) {
+            var range = document.createRange();
+            range.setStart(sel.anchorNode, sel.anchorOffset);
+            range.setEnd(sel.focusNode, sel.focusOffset);
+
+            var backwards = range.collapsed;
+            range.detach();
+
+            var endNode = sel.focusNode;
+            var endOffset = sel.focusOffset;
+            sel.collapse(sel.anchorNode, sel.anchorOffset);
+
+            var direction = backwards ? ['backward', 'forward'] : ['forward', 'backward'];
+
+            sel.modify("move", direction[0], "character");
+            sel.modify("move", direction[1], "word");
+            sel.extend(endNode, endOffset);
+            sel.modify("extend", direction[1], "character");
+            sel.modify("extend", direction[0], "word");
+        }
+    }, {
+        key: "selectParent",
+        value: function selectParent(sel, par) {
+            var range = document.createRange();
+            range.selectNode(par || sel.focusNode.parentNode);
+
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        }
+    }, {
+        key: "unwrap",
+        value: function unwrap(el) {
+            var par = el.parentElement;
+            while (el.firstChild) {
+                par.insertBefore(el.firstChild, el);
+            }
+            el.remove();
+        }
+    }, {
+        key: "_pushToHistory",
+        value: function _pushToHistory(entry) {
+            this.fire('history', entry);
+            this.log("Pushing new entry to history");
+            // Push to history, and remove first element if array is too big
+            this._history.mutations.push(entry) > this.settings.maxHistoryStack && this._history.mutations.shift();
+            this._history.undoStack = [];
+        }
+    }, {
+        key: "_observe",
+        value: function _observe(record) {
+            var _this12 = this;
+
+            record.forEach(function (x) {
+                return _this12._pushToHistory(LiliumTextHistoryEntry.fromRecord(x));
+            });
+        }
+    }, {
+        key: "_takeSnapshot",
+        value: function _takeSnapshot(manual) {
+            if (this.contentel.innerHTML != this._historylastState) {
+                this._historylastState = this.contentel.innerHTML;
+                this._pushToHistory(LiliumTextHistoryEntry.fromSnapshot(this._historylastState, manual));
+            }
+        }
+    }, {
+        key: "_startHistory",
+        value: function _startHistory() {
+            var _this13 = this;
+
+            if (false && window.MutationObserver) {
+                this.observer = new MutationObserver(this._observe.bind(this));
+                this.observer.observe(this.contentel, { childList: true, subtree: true });
+            } else {
+                this.snapshotTimerID = setInterval(function () {
+                    _this13._takeSnapshot();
+                }, this.settings.historyInterval);
+            }
+        }
+    }, {
+        key: "resetSnapshot",
+        value: function resetSnapshot() {
+            this.snapshotTimerID && clearInterval(this.snapshotTimerID);
+            this._startHistory();
+        }
+    }, {
+        key: "takeSnapshot",
+        value: function takeSnapshot() {
+            this.resetSnapshot();
+            this._takeSnapshot(true);
+        }
+    }, {
+        key: "isRangeInEditor",
+        value: function isRangeInEditor(range) {
+            return range && range.startContainer.compareDocumentPosition(this.contentel) & Node.DOCUMENT_POSITION_CONTAINS;
+        }
+    }, {
+        key: "insert",
+        value: function insert(element) {
+            var selection = this.restoreSelection();
+            var range = this.getRange();
+            if (!this.isRangeInEditor(range)) {
+                this.contentel.focus();
+                range = this.storeRange();
+            }
+
+            range.insertNode(element);
+            range.setStartAfter(element);
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }, {
+        key: "_focused",
+        value: function _focused() {
+            var eventresult = this.fire('focus');
+            this.focused = true;
+            if (!eventresult || !eventresult.includes(false)) {
+                this._tempSelection = undefined;
+                this._tempRange = undefined;
+                document.execCommand("defaultParagraphSeparator", false, this.settings.breaktag);
+            }
+        }
+    }, {
+        key: "_clicked",
+        value: function _clicked(event) {
+            var selection = window.getSelection();
+            var context = this.createSelectionContext(selection.focusNode);
+            var element = selection.focusNode.parentElement;
+            this.fire('clicked', { context: context, event: event, selection: selection, element: element });
+        }
+    }, {
+        key: "redo",
+        value: function redo() {
+            if (this._history.undoStack.length != 0) {
+                this.log('Restoring from undo stack');
+                var undoItem = this._history.undoStack.pop();
+                this._history.mutations.push(undoItem.mutation);
+                this.content = undoItem.markup;
+                this.resetSnapshot();
+
+                this.fire('redo');
+            }
+
+            return false;
+        }
+    }, {
+        key: "undo",
+        value: function undo() {
+            if (this._history.mutations.length != 0) {
+                this.log('Going up one state in history');
+                var mutation = this._history.mutations.pop();
+                var oldMarkup = this.content;
+
+                if (mutation.undo(this)) {
+                    this.log('Pushing to undo stack');
+                    this._history.undoStack.push({ markup: oldMarkup, mutation: mutation });
+                    this.resetSnapshot();
+                    this.fire('undo');
+                } else {
+                    return this.undo();
+                }
+            } else {
+                this.log('Restored original content');
+                this.content = this.settings.content;
+            }
+
+            return false;
+        }
+    }, {
+        key: "storeRange",
+        value: function storeRange() {
+            var tempSelection = window.getSelection();
+
+            if (tempSelection.focusNode) {
+                this._tempRange = tempSelection.getRangeAt(0).cloneRange();
+            }
+
+            return this._tempRange;
+        }
+    }, {
+        key: "restoreSelection",
+        value: function restoreSelection() {
+            var sel = window.getSelection();
+            if (!this.focused) {
+                sel.removeAllRanges();
+                sel.addRange(this.getRange());
+            }
+
+            return sel;
+        }
+    }, {
+        key: "getRange",
+        value: function getRange() {
+            return this._tempRange || this.storeRange();
+        }
+    }, {
+        key: "_blurred",
+        value: function _blurred() {
+            this.focused = false;
+            this.storeRange();
+            this.fire('blur');
+        }
+    }, {
+        key: "_keydown",
+        value: function _keydown(e) {
+            if ((e.ctrlKey || e.metaKey) && String.fromCharCode(e.which).toLowerCase() == 'z') {
+                e.preventDefault();
+                this.undo();
+
+                return false;
+            }
+        }
+    }, {
+        key: "_pasted",
+        value: function _pasted(e) {
+            var data = e.clipboardData || window.clipboardData;
+            var eventresult = this.fire('paste', data);
+
+            if (eventresult && eventresult.includes(false)) {
+                return;
+            }
+
+            if (data.types.includes('text/html')) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                var markup = data.getData("text/html");
+                var template = document.createElement('div');
+                template.innerHTML = markup;
+                if (this.settings.removepastedstyles) {
+                    Array.prototype.forEach.call(template.querySelectorAll('*'), function (x) {
+                        return x.removeAttribute('style');
+                    });
+                    Array.prototype.forEach.call(template.querySelectorAll('style'), function (x) {
+                        return x.remove();
+                    });
+                }
+
+                document.execCommand('insertHTML', false, template.innerHTML);
+            } else {
+                var text = data.getData("text");
+                if (this.settings.urldetection.exec(text)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    document.execCommand('createLink', false, text);
+                }
+            }
+        }
+    }, {
+        key: "_registerAllPlugins",
+        value: function _registerAllPlugins() {
+            var _this14 = this;
+
+            this.settings.plugins && this.settings.plugins.forEach(function (pluginClass) {
+                return _this14.registerPlugin(pluginClass);
+            });
+        }
+    }, {
+        key: "registerPlugin",
+        value: function registerPlugin(pluginClass) {
+            var pluginInstance = new pluginClass(this);
+
+            this.log('Registering plugin with id ' + pluginInstance.identifier);
+            pluginInstance.register();
+            this._plugins.push(pluginInstance);
+        }
+    }, {
+        key: "unregisterPlugin",
+        value: function unregisterPlugin(id) {
+            var index = -1;
+            var pluginInstance = this._plugins.find(function (x, i) {
+                if (x.identifier == id) {
+                    index = i;
+                    return x;
+                }
+            });
+
+            if (pluginInstance) {
+                pluginInstance && pluginInstance.unregister();
+                this._plugins.splice(index, 1);
+            }
+        }
+    }, {
+        key: "_init",
+        value: function _init() {
+            this.log('Initializing LiliumText instance');
+            this.toolbarel = document.createElement('div');
+            this.toolbarel.className = "liliumtext-topbar";
+
+            this.contentel = document.createElement('div');
+            this.contentel.contentEditable = true;
+            this.contentel.className = "liliumtext-editor";
+
+            this.codeel = document.createElement('pre');
+            this.codeel.contentEditable = true;
+            this.codeel.className = "liliumtext-code";
+
+            this.wrapperel.appendChild(this.toolbarel);
+            this.wrapperel.appendChild(this.contentel);
+            this.wrapperel.appendChild(this.codeel);
+
+            if (this.settings.content && this.settings.initrender) {
+                //setTimeout(() => {
+                this.contentel.innerHTML = this.settings.content;
+                //}, 10);
+            } else {
+                this.contentel.appendChild(document.createElement(this.settings.breaktag));
+            }
+
+            this.contentel.addEventListener('paste', this.settings.onpaste || this._pasted.bind(this));
+            this.contentel.addEventListener('focus', this._focused.bind(this));
+            this.contentel.addEventListener('blur', this._blurred.bind(this));
+            this.contentel.addEventListener('click', this._clicked.bind(this));
+            this.contentel.addEventListener('keydown', this._keydown.bind(this));
+
+            this._history = {
+                mutations: [],
+                undoStack: []
+            };
+            this._startHistory();
+            this._registerAllPlugins();
+
+            this.fire('init');
+            this.log('Initialized LiliumText instance');
+            this.initialized = true;
+        }
+    }, {
+        key: "createCommandSet",
+        value: function createCommandSet() {
+            var set = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+            var index = arguments[1];
+            var rerender = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+            if (index === -1) {
+                this.commandsets = [set].concat(_toConsumableArray(this.commandsets));
+            } else if (index < this.commandsets.length) {
+                this.commandsets = [].concat(_toConsumableArray(this.commandsets.slice(0, index)), [set], _toConsumableArray(this.commandsets.slice(index)));
+            } else {
+                this.commandsets.push(set);
+            }
+
+            rerender && this.render();
+        }
+    }, {
+        key: "addCommand",
+        value: function addCommand(command) {
+            var setIndex = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.commandsets.length - 1;
+            var rerender = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+
+            var set = this.commandsets[setIndex];
+            set ? set.push(command) : this.commandsets.push([command]);
+
+            rerender && this.render();
+        }
+    }, {
+        key: "bind",
+        value: function bind(eventname, callback) {
+            if (!this.hooks[eventname]) {
+                this.hooks[eventname] = [callback];
+            } else {
+                this.hooks[eventname].push(callback);
+            }
+        }
+    }, {
+        key: "fire",
+        value: function fire(eventname, args) {
+            var _this15 = this;
+
+            // this.log('Firing event : ' + eventname);
+            return this.hooks[eventname] && this.hooks[eventname].map(function (callback) {
+                return callback(_this15, args);
+            });
+        }
+    }, {
+        key: "toggleCode",
+        value: function toggleCode() {
+            this.log("Toggled code view");
+            this.codeview = !this.codeview;
+
+            if (this.codeview) {
+                this.codeel.textContent = this.contentel.innerHTML;
+            } else {
+                this.contentel.innerHTML = this.codeel.textContent;
+            }
+
+            this.codeel.classList[this.codeview ? "add" : "remove"]("visible");
+            this.contentel.classList[this.codeview ? "add" : "remove"]("invisible");
+
+            this.fire('code', this.codeview);
+            return true;
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var _this16 = this;
+
+            this.log('Rendering LiliumText instance');
+            this.fire('willrender');
+
+            this.log('Clearing toolbar');
+            this.toolbarel.firstElementChild && this.toolbarel.firstElementChild.remove();
+
+            this.log('Rendering toolbar');
+            var toolbarwrap = document.createElement('div');
+            toolbarwrap.className = "liliumtext-commands";
+            this.commandsets.forEach(function (set) {
+                var setel = document.createElement('div');
+                setel.className = "liliumtext-commandset";
+                toolbarwrap.appendChild(setel);
+
+                set.forEach(function (command) {
+                    setel.appendChild(command.make(_this16));
+                });
+            });
+
+            this.contentel.style.height = this.settings.height;
+            this.codeel.style.height = this.settings.height;
+            this.wrapperel.style.width = this.settings.width;
+
+            this.toolbarel.appendChild(toolbarwrap);
+
+            this.fire('render');
+            this.log('Done rendering');
+        }
+    }, {
+        key: "toString",
+        value: function toString() {
+            return this.content;
+        }
+    }, {
+        key: "describe",
+        value: function describe() {
+            var _this17 = this;
+
+            return this.settings.dev ? "[Development LiliumText Editor instance] Wraps DOM element with ID " + (this.wrapperel.id || '[No ID]') + ". This instance currently has " + Object.keys(this.hooks).reduce(function (total, ev) {
+                return total + _this17.hooks[ev].length;
+            }, 0) + " event hooks." : "[LiliumText Editor]";
+        }
+    }, {
+        key: "content",
+        set: function set(markup) {
+            var mobject = { markup: markup };
+            this.fire('set', mobject);
+
+            this.contentel.innerHTML = mobject.markup;
+        },
+        get: function get() {
+            var mhtml = { markup: this.contentel.innerHTML };
+            var content = this.fire('get', mhtml);
+            return mhtml.markup;
+        }
+    }]);
+
+    return LiliumText;
+}();
+
+;
+LiliumText.instances = {};
+
+if (typeof module !== "undefined") {
+    module.exports = { LiliumText: LiliumText, LiliumTextCustomCommand: LiliumTextCustomCommand, LiliumTextWebCommand: LiliumTextWebCommand, LiliumTextCommand: LiliumTextCommand, LiliumTextPlugin: LiliumTextPlugin };
+}

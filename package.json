@@ -1,6 +1,6 @@
 {
   "name": "lilium-text",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Web rich text editor. Not ready to be used at all.",
   "main": "build/liliumtext.js",
   "scripts": {
