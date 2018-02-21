@@ -195,10 +195,11 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         const newNode = document.createElement(nodetype);
 
         const selection = this.editor.restoreSelection();
-        const el = selection.focusNode.parentElement;
+        const el = selection.focusNode;
         const context = this.editor.createSelectionContext(el);
         const topLevelEl = context[context.length - 1].element;
         
+        debugger;
         this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
         const range = selection.getRangeAt(0);
@@ -460,10 +461,10 @@ class LiliumText {
     createSelectionContext(elem) {
         const context = [];
 
-        do {
+        while (elem != this.contentel && elem) {
             context.push({ type : elem.nodeName.toLowerCase().replace('#', ''), element : elem });
             elem = elem.parentNode;
-        } while (elem != this.contentel && elem);
+        }
 
         return context;
     }
@@ -671,7 +672,10 @@ class LiliumText {
             const markup = data.getData("text/html");
             const template = document.createElement('div');
             template.innerHTML = markup;
-            this.settings.removepastedstyles && Array.prototype.forEach.call(template.querySelectorAll('*'), x => x.removeAttribute('style'));
+            if (this.settings.removepastedstyles) {
+                Array.prototype.forEach.call(template.querySelectorAll('*'), x => x.removeAttribute('style'));
+                Array.prototype.forEach.call(template.querySelectorAll('style'), x => x.remove());
+            }
 
             document.execCommand('insertHTML', false, template.innerHTML);
         } else {
