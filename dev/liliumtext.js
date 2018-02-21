@@ -588,6 +588,8 @@ class LiliumText {
             this._history.mutations.push(undoItem.mutation);
             this.content = undoItem.markup; 
             this.resetSnapshot();
+
+            this.fire('redo');
         }
 
         return false;

@@ -31,9 +31,15 @@ It is possible to hook on various events and customize plenty of stuff. Hooks ca
 | initrender          | Will render right after creating the object.       | true                                                    |
 | removepastedstyles  | Removes the "style" attribute when pasting markup. | true                                                    |
 | dev                 | Development flag. If true, will output in console. | false                                                   |
+| plugins             | An array of LiliumTextPlugin extended classes      | []                                                      |
+| theme               | Theme identifier                                   | "minim"                                                 |
 | hooks               | Objects containing hooks and callbacks.            | {}                                                      |
 | width               | CSS width of the entire text Lilium Text           | "auto"                                                  |
 | height              | CSS height of the **editor** text box              | "420px"                                                 |
+| boldnode            | Element used to wrap bold text                     | "strong"                                                |
+| italicnode          | Element used to wrap italic text                   | "italic"                                                |
+| underlinenode       | Element used to wrap underlined text               | "u"                                                     |
+| strikenode          | Element used to wrap strikedthrough text           | "strike"                                                |
 | breaktag            | Defined the HTML tag used to wrap new lines        | "p"                                                     |
 | content             | Initial content                                    | ""                                                      |
 | urldetection        | Regular expression used to detect pasted links     | /^((https?):\/)\/?([^:\/\s]+)((\/\w+)*\/?)([\w\-\.])+/i |
@@ -58,18 +64,22 @@ editor.bind('code', (editor, isCodeView) => {
 });
 ```
 
-| Event Name | Occasion                                     | Args                          |
-| ---------- | -------------------------------------------- | ----------------------------- |
-| init       | The editor is finished initializing          |                               |
-| command    | A command is going to be executed            | String `commandName`          |
-| destroy    | The editor object was released               |                               |
-| focus      | The text portion of the editor was focused   |                               |
-| paste      | The user pasted content into the editor      | Object `DataTransfer`         |
-| code       | Toggle between text view and html view       | Boolean, true if code view    |
-| willrender | Editor is about to render                    |                               |
-| render     | Editor rendered                              |                               |
-| set        | The content setter was called                | Object `{ markup }`           |
-| get        | The content getter was called                | Object `{ markup }`           |
+| Event Name | Occasion                                     | Args                                  |
+| ---------- | -------------------------------------------- | ------------------------------------- |
+| init       | The editor is finished initializing          |                                       |
+| command    | A command is going to be executed            | String `commandName`                  |
+| destroy    | The editor object was released               |                                       |
+| history    | A state was pushed to history stack          | Entry `LiliumTextHistoryEntry`        |
+| focus      | The text portion of the editor was focused   |                                       |
+| paste      | The user pasted content into the editor      | Object `DataTransfer`                 |
+| code       | Toggle between text view and html view       | Boolean, true if code view            |
+| willrender | Editor is about to render                    |                                       |
+| render     | Editor rendered                              |                                       |
+| set        | The content setter was called                | Object `{ markup }`                   |
+| get        | The content getter was called                | Object `{ markup }`                   |
+| clicked    | A click inside the content editor            | Context, Event, Selection, Element    |
+| undo       | Went back one step in history stack          |                                       |
+| redo       | Went forward one step in history stack       |                                       |
 
 Some events will carry arguments as detailed in the "Args" column. When defining a callback, it is important to remember that the first argument is **always** the editor firing the event. If event arguments exist, they will appear as the second argument of the callback. 
 ```javascript
@@ -160,4 +170,45 @@ const textNode = document.createTextNode('Hello, World!');
 editor.insert(textNode);
 ```
 
+## Plugins
+For reusable logic, it is possible to extend the LiliumTextPlugin virtual class and create a plugin to avoid duplicate code. The plugin must override the two virtual methods `register`, `unregister` as well as the constructor. 
 
+For example.
+```javascript
+class myPlugin extends LiliumTextPlugin {
+    // The constructor receives a single argument : and instance of LiliumText
+    constructor(editor) {
+        // I recommend storing a reference to it like so
+        this.editor = editor;
+    }
+
+    register() {
+        this.boundInsertImage = this.insertImage.bind(this);
+        const insertImageCommand = new LiliumTextCustomCommand("myPluginInsertImage", this.boundInsertImage, "far fa-image");
+
+        // Add image insertion command in fourth group (index 3)
+        this.instance.addCommand(insertImageCommand, 3);
+        this.instance.bind('some-event', this.someOutcome);
+    }
+
+    unregister() {
+        // Remove command, remove bindings, etc
+    }
+
+    insertImage() {
+        // Insert new image into content using this.editor reference
+    }
+}
+```
+
+Once the class is ready to be tested, **the class itself** must be passed as an argument to the `registerPlugin` method of a LiliumText instance. It is also possible to pass an array of plugins to register during initialization using the `plugins` options. 
+
+```javascript
+const myEditor = new LiliumText('myEditor', { plugins : [myPlugin] });
+// OR 
+
+const myEdutir = new LiliumText('myEditor', {});
+myEditor.registerPlugin(myPlugin);
+```
+
+The `register` method overridden by the `myPlugin` class will be called during the initialization if provided as an option of the LiliumText constructor, or when the `registerPlugin` method is called. 
