@@ -11,6 +11,8 @@
             body {
                 font-family : 'Ovo', serif;
             }
+
+            .hljs{display:block;overflow-x:auto;padding:.5em;background:#333;color:#fff}.hljs-name,.hljs-strong{font-weight:700}.hljs-code,.hljs-emphasis{font-style:italic}.hljs-tag{color:#62c8f3}.hljs-selector-class,.hljs-selector-id,.hljs-template-variable,.hljs-variable{color:#ade5fc}.hljs-bullet,.hljs-string{color:#a2fca2}.hljs-attribute,.hljs-built_in,.hljs-builtin-name,.hljs-quote,.hljs-section,.hljs-title,.hljs-type{color:#ffa}.hljs-bullet,.hljs-number,.hljs-symbol{color:#d36363}.hljs-keyword,.hljs-literal,.hljs-selector-tag{color:#fcc28c}.hljs-code,.hljs-comment,.hljs-deletion{color:#888}.hljs-link,.hljs-regexp{color:#c6b4f0}.hljs-meta{color:#fc9b9b}.hljs-deletion{background-color:#fc9b9b;color:#333}.hljs-addition{background-color:#a2fca2;color:#333}.hljs a{color:inherit}.hljs a:focus,.hljs a:hover{color:inherit;text-decoration:underline}
         </style>       
         <title>Lilium Text - Test page</title>
     </head>
@@ -21,6 +23,8 @@
         </div>
 
         <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.5.1/less.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/languages/xml.min.js"></script>
         <script src="liliumtext.js"></script>
         <script>
             const content = "<h1>This is awesome.</h1><hr/><p>Testing with <u>cool</u> content. <b>Lorem Ipsum</b>? Nah. I rather write real stuff to fill up the small form I created using editable content. Yep! That's pretty neat! Right?&nbsp;</p><h2>Right...?</h2><script>alert('No XSS')</scr"+"ipt><p><b>Here,</b> we have fun. There is Javascript above this paragraph, but it won't get executed. You can still see it though.</p><hr/><p>Testing : <b><i>This should</i> be an </b> interesting <i>playground <b>where <u>weird</u> things</b> happen <strike>sometimes</strike>.</i></p>";
@@ -33,6 +37,11 @@
             });
         </script>
         <script>
+            // Color highlight in code 
+            editor.bind('code', function(editor, isCode) {
+                isCode && hljs.highlightBlock(editor.codeel);
+            })
+
             class myPlugin extends LiliumTextPlugin {
                 constructor(instance) {
                     super("myPlugin");

@@ -721,7 +721,7 @@ class LiliumText {
         this.contentel.contentEditable = true;
         this.contentel.className = "liliumtext-editor"
 
-        this.codeel = document.createElement('div');
+        this.codeel = document.createElement('pre');
         this.codeel.contentEditable = true;
         this.codeel.className = "liliumtext-code";
 
@@ -791,7 +791,6 @@ class LiliumText {
         this.log("Toggled code view");
         this.codeview = !this.codeview;
 
-        this.fire('code', this.codeview);
         if (this.codeview) {
             this.codeel.textContent = this.contentel.innerHTML;
         } else {
@@ -801,6 +800,7 @@ class LiliumText {
         this.codeel.classList[this.codeview ? "add" : "remove"]("visible");
         this.contentel.classList[this.codeview ? "add" : "remove"]("invisible");
 
+        this.fire('code', this.codeview);
         return true;
     }
 
