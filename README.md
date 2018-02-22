@@ -1,10 +1,12 @@
 # Lilium Text
-A lightweight, dependency-free, extensible text editor. 
+A lightweight, dependency-free, extensible text editor.
 
 ![First Screenshot](https://erikdesjardins.com/static/git/liliumtext-1.jpg)
 
 ## About the project
 [Narcity Media](https://github.com/narcitymedia/) needed a new Text Editor to replace to current one, and I figured since we don't have anything open source yet (including our *AMAZING* CMS), this would be a good start. The editor doesn't do much yet, and was created overnight. 
+
+The project is still in early development and is not ready to be used in production. This is why we are using a single branch for now. 
 
 I tried to find a great, open-source rich text editor that didn't require other libraries (like jQuery), but couldn't find anything interesting enough. Since the entire CMS is almost dependency-free, I figured the only few dependencies should be dependency-free as well. 
 
@@ -225,3 +227,12 @@ To unregister a plugin, simply call `editorInstance.unregisterPlugin(pluginID)`.
 ```javascript
 editor.unregisterPlugin(myPlugin.uniqueIdentifier);
 ```
+
+## Future plans
+Since I wanted to explore the latest In-the-Browser Javascript features, the project is currently not really backward compatible. It would be great if it were. 
+
+I also plan on making it a [React](https://reactjs.org/) component.
+
+The build is dependency-free (aside from Babel), and it will remain like so.
+
+Finally, since the editor allows anyone to create their own plugins, I'd like to create a small website where anyone would be able to submit their plugins for a more centralized showcasing.
