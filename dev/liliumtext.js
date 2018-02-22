@@ -564,6 +564,28 @@ class LiliumText {
         selection.addRange(range);
     }
 
+    insertBlock(element) {
+        const selection = this.restoreSelection();
+        const context = this.createSelectionContext(selection.focusNode);
+        const ctxElem = context[context.length-1];
+
+        if (ctxElem && ctxElem.element.nextElementSibling) {
+            const curParag = ctxElem.element;
+            if (curParag) {
+                curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
+            }    
+        } else {
+            this.contentel.appendChild(element);
+        }
+
+        const range = selection.getRangeAt(0).cloneRange();
+        range.setEndAfter(element);
+        range.collapse(false);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
     _focused() {
         const eventresult = this.fire('focus');
         this.focused = true;
