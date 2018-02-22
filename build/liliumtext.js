@@ -146,7 +146,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     var clone = leftEl.cloneNode();
                     leftEl.parentElement.insertBefore(clone, leftEl);
 
-                    while (leftEl.firstChild != placeholder) {
+                    while (leftEl.firstChild && leftEl.firstChild != placeholder) {
                         clone.appendChild(leftEl.firstChild);
                     }
 
@@ -715,6 +715,29 @@ var LiliumText = function () {
 
             range.insertNode(element);
             range.setStartAfter(element);
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }, {
+        key: "insertBlock",
+        value: function insertBlock(element) {
+            var selection = this.restoreSelection();
+            var context = this.createSelectionContext(selection.focusNode);
+            var ctxElem = context[context.length - 1];
+
+            if (ctxElem && ctxElem.element.nextElementSibling) {
+                var curParag = ctxElem.element;
+                if (curParag) {
+                    curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
+                }
+            } else {
+                this.contentel.appendChild(element);
+            }
+
+            var range = selection.getRangeAt(0).cloneRange();
+            range.setEndAfter(element);
+            range.collapse(false);
 
             selection.removeAllRanges();
             selection.addRange(range);

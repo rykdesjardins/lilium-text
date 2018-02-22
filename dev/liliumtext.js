@@ -95,7 +95,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 const clone = leftEl.cloneNode();
                 leftEl.parentElement.insertBefore(clone, leftEl);
 
-                while (leftEl.firstChild != placeholder) {
+                while (leftEl.firstChild && leftEl.firstChild != placeholder) {
                     clone.appendChild(leftEl.firstChild);
                 }
 

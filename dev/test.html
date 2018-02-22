@@ -53,6 +53,9 @@
                 insertImage(instance, ev) {
                     // insert image
                     this.instance.log("Plugin command function was successfully called");
+                    const image = document.createElement('img');
+                    image.src = "https://cdn.narcitymedia.com/wp-content/themes/narcityboard/media/logo_trans.png";
+                    this.instance.insertBlock(image);
                 }
 
                 register() {
