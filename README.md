@@ -6,9 +6,43 @@ A lightweight, dependency-free, extensible text editor.
 ## About the project
 [Narcity Media](https://github.com/narcitymedia/) needed a new Text Editor to replace to current one, and I figured since we don't have anything open source yet (including our *AMAZING* CMS), this would be a good start. The editor doesn't do much yet, and was created overnight. 
 
-The project is still in early development and is not ready to be used in production. This is why we are using a single branch for now. 
-
 I tried to find a great, open-source rich text editor that didn't require other libraries (like jQuery), but couldn't find anything interesting enough. Since the entire CMS is almost dependency-free, I figured the only few dependencies should be dependency-free as well. 
+
+## Adding it to your project
+The project is still in early development and **is not ready to be used in production**. This is why we are using a single branch for now. 
+
+If you would like to try it, it is currently published on [npm](https://www.npmjs.com/package/lilium-text), and you should be able to install it using `npm install lilium-text`.
+
+### For dynamic / ES6+ projects
+```javascript
+import { LiliumText } from 'lilium-text';
+// OR
+const LiliumText = require('lilium-text').LiliumText;
+```
+
+### For static projects
+If you clone from `npm`, your build will be under `node_modules/build/liliumtext.js`. Depending on how you setup your project, you might want to set a custom rule in your webserver, or simply move the file elsewhere.
+```html
+<script src="your/assets/directory/liliumtext.js"></script>
+```
+
+### Exported classes
+The following classes are exported from the final build. 
+ - **LiliumText**
+ - LiliumTextCustomCommand
+ - LiliumTextWebCommand
+ - LiliumTextCommand
+ - LiliumTextPlugin
+ 
+All exported classes except the first one are abstract and are meant to be extended like so : 
+```javascript
+class myPlugin extends LiliumTextPlugin {
+    constructor(liliumTextInstance) {
+        super('myPlugin');
+        this.instance = liliumTextInstance;
+    }
+}
+```
 
 ## Compiling
 Lilium Text uses [Babel](https://babeljs.io/) to compile ES6 files into "browser Javascript". Simply install all required packages once using `npm install`, then run `npm run build`. Compiled files will be located under `/build`.
@@ -234,5 +268,7 @@ Since I wanted to explore the latest In-the-Browser Javascript features, the pro
 I also plan on making it a [React](https://reactjs.org/) component.
 
 The build is dependency-free (aside from Babel), and it will remain like so.
+
+If Narcity Media is open to it, I'd like to host builds on our CDN and let everyone use it. 
 
 Finally, since the editor allows anyone to create their own plugins, I'd like to create a small website where anyone would be able to submit their plugins for a more centralized showcasing.
