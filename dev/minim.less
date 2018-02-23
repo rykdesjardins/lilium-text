@@ -1,5 +1,7 @@
 .liliumtext {
     &.theme-minim {
+        overflow : hidden;
+
         .liliumtext-editor,
         .liliumtext-code {
             border: 1px solid #DDD;
@@ -55,27 +57,26 @@
 
         .liliumtext-topbar {
             border: 1px solid #DDD;
-            background : #F8F8F8;
-            padding: 3px;
+            background: #F8F8F8;
+            border-bottom-width: 1px;
+            box-shadow: 0px 1px 1px rgba(0,0,0,0.1);
         }
 
         .liliumtext-commandset {
             display: inline-block;
-            margin: 3px;
-            border: 1px solid #DDD;
-            border-radius: 3px;
             background: #FFF;
+            border-right: 1px solid #DDD;
         }
 
         .liliumtext-topbar-command {
             display: inline-block;
-            padding-top: 6px;
+            padding-top: 10px;
             text-align: center;
             vertical-align: middle;
-            width: 28px;
-            height: 22px;
+            width: 40px;
+            height: 26px;
             cursor: pointer;
-            color : #333;
+            color: #333;
             transition: all 0.1s;
 
             &.liliumtext-command-withtext {
