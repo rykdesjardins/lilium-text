@@ -633,7 +633,7 @@ class LiliumText {
             selection.addRange(range);
         } else {
             if (ctxElem && ctxElem.nextElementSibling) {
-                const curParag = ctxElem.element;
+                const curParag = ctxElem;
                 if (curParag) {
                     curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
                 }    

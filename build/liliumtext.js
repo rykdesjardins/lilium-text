@@ -785,7 +785,7 @@ var LiliumText = function () {
                 selection.addRange(range);
             } else {
                 if (ctxElem && ctxElem.nextElementSibling) {
-                    var curParag = ctxElem.element;
+                    var curParag = ctxElem;
                     if (curParag) {
                         curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
                     }
