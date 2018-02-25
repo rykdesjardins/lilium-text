@@ -125,19 +125,21 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 selection.getRangeAt(0).insertNode(placeholder);
 
                 const leftEl = leftExistWrap;
-                const clone = leftEl.cloneNode();
+                const clone = leftEl.cloneNode(true);
                 leftEl.parentElement.insertBefore(clone, leftEl);
 
-                while (leftEl.firstChild && leftEl.firstChild != placeholder) {
-                    clone.appendChild(leftEl.firstChild);
+                const clonePlaceholder = clone.querySelector('liliumtext-placeholder');
+                while (clonePlaceholder.nextSibling) {
+                    clonePlaceholder.nextSibling.remove();
+                }
+
+                while (placeholder.previousSibling) {
+                    placeholder.previousSibling.remove();
                 }
 
                 leftEl.parentElement.insertBefore(frag, leftEl);
                 placeholder.remove();
-
-                this.editor.log('Removing empty trailing <' + nodetype + '> element');
-                !clone.textContent.trim() && clone.remove();
-                !leftEl.textContent.trim() && leftEl.remove();
+                clonePlaceholder.remove();
             } else if (leftExistWrap && rightExistWrap) {
                 this.editor.log("Merge wrap from two sources with node types : " + nodetype);
                 // Merge wrap
