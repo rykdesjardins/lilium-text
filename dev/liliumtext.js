@@ -196,17 +196,26 @@ class LiliumTextWebCommand extends LiliumTextCommand {
 
         const selection = this.editor.restoreSelection();
         const el = selection.focusNode;
-        const context = this.editor.createSelectionContext(el);
-        const topLevelEl = context[context.length - 1].element;
-        
-        this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
-        const range = selection.getRangeAt(0);
-        range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
-        range.collapse(true);
+        if (el == this.editor.contentel) {
+            this.editor.contentel.insertBefore(newNode, this.editor.contentel.children[selection.focusOffset]);
+        } else {
+            const context = this.editor.createSelectionContext(el);
+            const topLevelEl = context[context.length - 1].element;
+            
+            this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
-        selection.removeAllRanges();
-        selection.addRange(range);
+            if (selection.focusOffset == 0) {
+                
+            } else {
+                const range = selection.getRangeAt(0);
+                range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
+                range.collapse(true);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
     }
 
     execute(ev) {
@@ -569,21 +578,34 @@ class LiliumText {
         const context = this.createSelectionContext(selection.focusNode);
         const ctxElem = context[context.length-1];
 
-        if (ctxElem && ctxElem.element.nextElementSibling) {
-            const curParag = ctxElem.element;
-            if (curParag) {
-                curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
-            }    
+        if (selection.focusNode == this.contentel) {
+            this.contentel.insertBefore(element, this.contentel.children[selection.focusOffset]);
+
+            const range = selection.getRangeAt(0).cloneRange();
+            range.setEndAfter(element);
+            range.collapse(false);
+
+            selection.removeAllRanges();
+            selection.addRange(range);
         } else {
-            this.contentel.appendChild(element);
+            if (ctxElem && ctxElem.element.nextElementSibling) {
+                const curParag = ctxElem.element;
+                if (curParag) {
+                    curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
+                }    
+            } else {
+                this.contentel.appendChild(element);
+            }
+
+            if (selection.focusOffset != 0) {
+                const range = selection.getRangeAt(0).cloneRange();
+                range.setEndAfter(element);
+                range.collapse(false);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
         }
-
-        const range = selection.getRangeAt(0).cloneRange();
-        range.setEndAfter(element);
-        range.collapse(false);
-
-        selection.removeAllRanges();
-        selection.addRange(range);
     }
 
     _focused() {
