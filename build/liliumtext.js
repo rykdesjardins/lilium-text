@@ -85,10 +85,23 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                 });
                 if (maybeCtxElem) {
                     this.editor.log('Unwrapping element of node type ' + nodetype);
-                    var el = maybeCtxElem.element;
-                    this.editor.unwrap(el);
+                    this.editor.unwrap(maybeCtxElem);
                 }
             } else if (selection.type == "Range") {
+                /* 
+                 * CONTEXT VARIABLES DEFINITION ------
+                 *
+                 * left, right : Nodes where selection starts and ends. Everything in between is located inside the fragment.
+                 * leftCtx, rightCtx : Array containing nodes from the selected one up to the editor one
+                 * leftExistWrap, rightExistWrap : Wrapped node if node already exists, otherwise undefined
+                 *
+                 * range : current selection range object
+                 * frag : fragment containing everything from inside the selection. Not a copy; actual nodes. 
+                 *
+                 **/
+
+                var capNodeType = nodetype.toUpperCase();
+
                 var _ref = selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING ? [selection.anchorNode, selection.focusNode] : [selection.focusNode, selection.anchorNode],
                     _ref2 = _slicedToArray(_ref, 2),
                     left = _ref2[0],
@@ -98,9 +111,9 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     leftCtx = _ref3[0],
                     rightCtx = _ref3[1];
                 var _ref4 = [leftCtx.find(function (x) {
-                    return x.type == nodetype;
+                    return x.nodeName == capNodeType;
                 }), rightCtx.find(function (x) {
-                    return x.type == nodetype;
+                    return x.nodeName == capNodeType;
                 })],
                     leftExistWrap = _ref4[0],
                     rightExistWrap = _ref4[1];
@@ -117,7 +130,9 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     range.insertNode(frag.childNodes[0]);
                 }
 
-                if (left.parentElement === right.parentElement && !leftExistWrap) {
+                var fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelector(nodetype);
+
+                if (left.parentElement === right.parentElement && !leftExistWrap && !fragWrap) {
                     this.editor.log("Quick range wrap with element of node type " + nodetype);
                     var newElem = document.createElement(nodetype);
                     newElem.appendChild(frag);
@@ -133,29 +148,50 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
 
                     // Extend existing wrapper
                     var wrapper = leftExistWrap || rightExistWrap;
-                    Array.prototype.forEach.call(wrapper.element.querySelectorAll(nodetype), function (node) {
+                    Array.prototype.forEach.call(wrapper.querySelectorAll(nodetype), function (node) {
                         _this3.editor.unwrap(node);
                     });
-                } else if (leftExistWrap && rightExistWrap && leftExistWrap.element === rightExistWrap.element) {
+                } else if (fragWrap) {
+                    // There is an element inside the fragment with requested node name
+                    // Unwrap child element
+                    this.editor.log('Fragment child unwrap with node type ' + nodetype);
+                    while (fragWrap) {
+                        var newFrag = document.createDocumentFragment();
+                        while (fragWrap.firstChild) {
+                            newFrag.appendChild(fragWrap.firstChild);
+                        }
+
+                        var target = fragWrap.parentElement || frag;
+                        target.insertBefore(newFrag, target.firstChild);
+                        fragWrap.remove();
+
+                        fragWrap = frag.querySelector(nodetype);
+                    }
+
+                    var _range = selection.getRangeAt(0);
+                    _range.insertNode(frag);
+                } else if (leftExistWrap && rightExistWrap && leftExistWrap === rightExistWrap) {
                     // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
                     this.editor.log("Placeholder unwrap from two sources with node types : " + nodetype);
                     var placeholder = document.createElement('liliumtext-placeholder');
                     selection.getRangeAt(0).insertNode(placeholder);
 
-                    var leftEl = leftExistWrap.element;
-                    var clone = leftEl.cloneNode();
+                    var leftEl = leftExistWrap;
+                    var clone = leftEl.cloneNode(true);
                     leftEl.parentElement.insertBefore(clone, leftEl);
 
-                    while (leftEl.firstChild && leftEl.firstChild != placeholder) {
-                        clone.appendChild(leftEl.firstChild);
+                    var clonePlaceholder = clone.querySelector('liliumtext-placeholder');
+                    while (clonePlaceholder.nextSibling) {
+                        clonePlaceholder.nextSibling.remove();
+                    }
+
+                    while (placeholder.previousSibling) {
+                        placeholder.previousSibling.remove();
                     }
 
                     leftEl.parentElement.insertBefore(frag, leftEl);
                     placeholder.remove();
-
-                    this.editor.log('Removing empty trailing <' + nodetype + '> element');
-                    !clone.textContent.trim() && clone.remove();
-                    !leftEl.textContent.trim() && leftEl.remove();
+                    clonePlaceholder.remove();
                 } else if (leftExistWrap && rightExistWrap) {
                     this.editor.log("Merge wrap from two sources with node types : " + nodetype);
                     // Merge wrap
@@ -171,7 +207,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
 
                     rightFrag.remove();
                     selection.getRangeAt(0).insertNode(frag);
-                } else if (frag.childNodes.length == 1) {
+                } else if (frag.childNodes.length == 1 && frag.childNodes[0].nodeName == nodetype) {
                     // Entire element is selected, Unwrap entire element
                     this.editor.log("Single unwrap of node type : " + nodetype);
                     var wrap = frag.childNodes[0];
@@ -183,7 +219,13 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     this.editor.log("Fragment wrap with node type : " + nodetype);
                     var _newElem2 = document.createElement(nodetype);
                     _newElem2.appendChild(frag);
-                    selection.getRangeAt(0).insertNode(_newElem2);
+
+                    var _range2 = selection.getRangeAt(0);
+                    _range2.insertNode(_newElem2);
+                    _range2.selectNode(_newElem2);
+
+                    selection.removeAllRanges();
+                    selection.addRange(_range2);
                 }
             }
         }
@@ -202,7 +244,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
             var context = this.editor.createSelectionContext(selection.focusNode);
             var blocktags = this.editor.settings.blockelements;
 
-            var topLevelTag = context && context.length ? context[context.length - 1].element : this.editor.contentel.children[selection.focusOffset];
+            var topLevelTag = context && context.length ? context[context.length - 1] : this.editor.contentel.children[selection.focusOffset];
 
             if (topLevelTag.nodeName != nodetype) {
                 var newNode = document.createElement(nodetype);
@@ -228,18 +270,17 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
     }, {
         key: "executeRemove",
         value: function executeRemove() {
-            var _this4 = this;
-
             if (this.param) {
                 var el = this.editor.restoreSelection().focusNode.parentElement;
                 var context = this.editor.createSelectionContext(el);
 
+                var upperNode = this.param.toUpperCase();
                 var wrapperCtx = context.find(function (x) {
-                    return x.type == _this4.param;
+                    return x.nodeName == upperNode;
                 });
                 if (wrapperCtx) {
                     this.editor.log('Unwrapping node ' + this.param);
-                    this.editor.unwrap(wrapperCtx.element);
+                    this.editor.unwrap(wrapperCtx);
                 }
             } else {
                 this.editor.log('Executing native command removeFormat');
@@ -260,7 +301,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                 this.editor.contentel.insertBefore(newNode, this.editor.contentel.children[selection.focusOffset]);
             } else {
                 var context = this.editor.createSelectionContext(el);
-                var topLevelEl = context[context.length - 1].element;
+                var topLevelEl = context[context.length - 1];
 
                 this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
@@ -311,14 +352,14 @@ var LiliumTextCustomCommand = function (_LiliumTextCommand2) {
     function LiliumTextCustomCommand(id, callback, cssClass, imageURL, text) {
         _classCallCheck(this, LiliumTextCustomCommand);
 
-        var _this5 = _possibleConstructorReturn(this, (LiliumTextCustomCommand.__proto__ || Object.getPrototypeOf(LiliumTextCustomCommand)).call(this));
+        var _this4 = _possibleConstructorReturn(this, (LiliumTextCustomCommand.__proto__ || Object.getPrototypeOf(LiliumTextCustomCommand)).call(this));
 
-        _this5.webName = id;
-        _this5.callback = callback;
-        _this5.cssClass = cssClass;
-        _this5.imageURL = imageURL;
-        _this5.text = text;
-        return _this5;
+        _this4.webName = id;
+        _this4.callback = callback;
+        _this4.cssClass = cssClass;
+        _this4.imageURL = imageURL;
+        _this4.text = text;
+        return _this4;
     }
 
     _createClass(LiliumTextCustomCommand, [{
@@ -352,12 +393,12 @@ var LiliumTextHistoryEntry = function () {
                 function ChildListHistoryEntry(record) {
                     _classCallCheck(this, ChildListHistoryEntry);
 
-                    var _this6 = _possibleConstructorReturn(this, (ChildListHistoryEntry.__proto__ || Object.getPrototypeOf(ChildListHistoryEntry)).call(this, "ChildList"));
+                    var _this5 = _possibleConstructorReturn(this, (ChildListHistoryEntry.__proto__ || Object.getPrototypeOf(ChildListHistoryEntry)).call(this, "ChildList"));
 
-                    _this6.record = record;
-                    _this6.target = record.target;
-                    _this6.previousState = record.oldValue;
-                    return _this6;
+                    _this5.record = record;
+                    _this5.target = record.target;
+                    _this5.previousState = record.oldValue;
+                    return _this5;
                 }
 
                 return ChildListHistoryEntry;
@@ -369,10 +410,10 @@ var LiliumTextHistoryEntry = function () {
                 function TextHistoryEntry(record) {
                     _classCallCheck(this, TextHistoryEntry);
 
-                    var _this7 = _possibleConstructorReturn(this, (TextHistoryEntry.__proto__ || Object.getPrototypeOf(TextHistoryEntry)).call(this, "Text"));
+                    var _this6 = _possibleConstructorReturn(this, (TextHistoryEntry.__proto__ || Object.getPrototypeOf(TextHistoryEntry)).call(this, "Text"));
 
-                    _this7.record = record;
-                    return _this7;
+                    _this6.record = record;
+                    return _this6;
                 }
 
                 return TextHistoryEntry;
@@ -384,10 +425,10 @@ var LiliumTextHistoryEntry = function () {
                 function AttributesHistoryEntry(record) {
                     _classCallCheck(this, AttributesHistoryEntry);
 
-                    var _this8 = _possibleConstructorReturn(this, (AttributesHistoryEntry.__proto__ || Object.getPrototypeOf(AttributesHistoryEntry)).call(this, "Attributes"));
+                    var _this7 = _possibleConstructorReturn(this, (AttributesHistoryEntry.__proto__ || Object.getPrototypeOf(AttributesHistoryEntry)).call(this, "Attributes"));
 
-                    _this8.record = record;
-                    return _this8;
+                    _this7.record = record;
+                    return _this7;
                 }
 
                 return AttributesHistoryEntry;
@@ -399,10 +440,10 @@ var LiliumTextHistoryEntry = function () {
                 function AutomaticSnapshotEntry(state) {
                     _classCallCheck(this, AutomaticSnapshotEntry);
 
-                    var _this9 = _possibleConstructorReturn(this, (AutomaticSnapshotEntry.__proto__ || Object.getPrototypeOf(AutomaticSnapshotEntry)).call(this, "AutomaticSnapshot"));
+                    var _this8 = _possibleConstructorReturn(this, (AutomaticSnapshotEntry.__proto__ || Object.getPrototypeOf(AutomaticSnapshotEntry)).call(this, "AutomaticSnapshot"));
 
-                    _this9.markup = state;
-                    return _this9;
+                    _this8.markup = state;
+                    return _this8;
                 }
 
                 _createClass(AutomaticSnapshotEntry, [{
@@ -424,10 +465,10 @@ var LiliumTextHistoryEntry = function () {
                 function ManualSnapshotEntry(state) {
                     _classCallCheck(this, ManualSnapshotEntry);
 
-                    var _this10 = _possibleConstructorReturn(this, (ManualSnapshotEntry.__proto__ || Object.getPrototypeOf(ManualSnapshotEntry)).call(this, "ManualSnapshot"));
+                    var _this9 = _possibleConstructorReturn(this, (ManualSnapshotEntry.__proto__ || Object.getPrototypeOf(ManualSnapshotEntry)).call(this, "ManualSnapshot"));
 
-                    _this10.markup = state;
-                    return _this10;
+                    _this9.markup = state;
+                    return _this9;
                 }
 
                 _createClass(ManualSnapshotEntry, [{
@@ -527,7 +568,7 @@ var LiliumText = function () {
     }]);
 
     function LiliumText(nameOrElem) {
-        var _this11 = this;
+        var _this10 = this;
 
         var settings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -561,7 +602,7 @@ var LiliumText = function () {
         this.wrapperel.classList.add('liliumtext');
         this.wrapperel.classList.add('theme-' + this.settings.theme);
         Object.keys(this.settings.hooks).forEach(function (ev) {
-            _this11.bind(ev, _this11.settings.hooks[ev]);
+            _this10.bind(ev, _this10.settings.hooks[ev]);
         });
 
         this._init();
@@ -607,7 +648,7 @@ var LiliumText = function () {
             var context = [];
 
             while (elem != this.contentel && elem) {
-                context.push({ type: elem.nodeName.toLowerCase().replace('#', ''), element: elem });
+                context.push(elem);
                 elem = elem.parentNode;
             }
 
@@ -665,10 +706,10 @@ var LiliumText = function () {
     }, {
         key: "_observe",
         value: function _observe(record) {
-            var _this12 = this;
+            var _this11 = this;
 
             record.forEach(function (x) {
-                return _this12._pushToHistory(LiliumTextHistoryEntry.fromRecord(x));
+                return _this11._pushToHistory(LiliumTextHistoryEntry.fromRecord(x));
             });
         }
     }, {
@@ -682,14 +723,14 @@ var LiliumText = function () {
     }, {
         key: "_startHistory",
         value: function _startHistory() {
-            var _this13 = this;
+            var _this12 = this;
 
             if (false && window.MutationObserver) {
                 this.observer = new MutationObserver(this._observe.bind(this));
                 this.observer.observe(this.contentel, { childList: true, subtree: true });
             } else {
                 this.snapshotTimerID = setInterval(function () {
-                    _this13._takeSnapshot();
+                    _this12._takeSnapshot();
                 }, this.settings.historyInterval);
             }
         }
@@ -743,7 +784,7 @@ var LiliumText = function () {
                 selection.removeAllRanges();
                 selection.addRange(range);
             } else {
-                if (ctxElem && ctxElem.element.nextElementSibling) {
+                if (ctxElem && ctxElem.nextElementSibling) {
                     var curParag = ctxElem.element;
                     if (curParag) {
                         curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
@@ -753,12 +794,12 @@ var LiliumText = function () {
                 }
 
                 if (selection.focusOffset != 0) {
-                    var _range = selection.getRangeAt(0).cloneRange();
-                    _range.setEndAfter(element);
-                    _range.collapse(false);
+                    var _range3 = selection.getRangeAt(0).cloneRange();
+                    _range3.setEndAfter(element);
+                    _range3.collapse(false);
 
                     selection.removeAllRanges();
-                    selection.addRange(_range);
+                    selection.addRange(_range3);
                 }
             }
         }
@@ -908,10 +949,10 @@ var LiliumText = function () {
     }, {
         key: "_registerAllPlugins",
         value: function _registerAllPlugins() {
-            var _this14 = this;
+            var _this13 = this;
 
             this.settings.plugins && this.settings.plugins.forEach(function (pluginClass) {
-                return _this14.registerPlugin(pluginClass);
+                return _this13.registerPlugin(pluginClass);
             });
         }
     }, {
@@ -1023,11 +1064,11 @@ var LiliumText = function () {
     }, {
         key: "fire",
         value: function fire(eventname, args) {
-            var _this15 = this;
+            var _this14 = this;
 
             // this.log('Firing event : ' + eventname);
             return this.hooks[eventname] && this.hooks[eventname].map(function (callback) {
-                return callback(_this15, args);
+                return callback(_this14, args);
             });
         }
     }, {
@@ -1051,7 +1092,7 @@ var LiliumText = function () {
     }, {
         key: "render",
         value: function render() {
-            var _this16 = this;
+            var _this15 = this;
 
             this.log('Rendering LiliumText instance');
             this.fire('willrender');
@@ -1068,7 +1109,7 @@ var LiliumText = function () {
                 toolbarwrap.appendChild(setel);
 
                 set.forEach(function (command) {
-                    setel.appendChild(command.make(_this16));
+                    setel.appendChild(command.make(_this15));
                 });
             });
 
@@ -1089,10 +1130,10 @@ var LiliumText = function () {
     }, {
         key: "describe",
         value: function describe() {
-            var _this17 = this;
+            var _this16 = this;
 
             return this.settings.dev ? "[Development LiliumText Editor instance] Wraps DOM element with ID " + (this.wrapperel.id || '[No ID]') + ". This instance currently has " + Object.keys(this.hooks).reduce(function (total, ev) {
-                return total + _this17.hooks[ev].length;
+                return total + _this16.hooks[ev].length;
             }, 0) + " event hooks." : "[LiliumText Editor]";
         }
     }, {
