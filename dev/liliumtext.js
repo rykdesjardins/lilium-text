@@ -149,7 +149,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         const context = this.editor.createSelectionContext(selection.focusNode);
         const blocktags = this.editor.settings.blockelements;
 
-        const topLevelTag = this.context ?
+        const topLevelTag = context && context.length ?
             context[context.length - 1].element :
             this.editor.contentel.children[selection.focusOffset];
 

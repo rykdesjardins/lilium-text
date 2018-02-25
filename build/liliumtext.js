@@ -202,7 +202,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
             var context = this.editor.createSelectionContext(selection.focusNode);
             var blocktags = this.editor.settings.blockelements;
 
-            var topLevelTag = this.context ? context[context.length - 1].element : this.editor.contentel.children[selection.focusOffset];
+            var topLevelTag = context && context.length ? context[context.length - 1].element : this.editor.contentel.children[selection.focusOffset];
 
             if (topLevelTag.nodeName != nodetype) {
                 var newNode = document.createElement(nodetype);
