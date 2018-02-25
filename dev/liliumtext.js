@@ -149,7 +149,9 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         const context = this.editor.createSelectionContext(selection.focusNode);
         const blocktags = this.editor.settings.blockelements;
 
-        const topLevelTag = context[context.length - 1].element;
+        const topLevelTag = this.context ?
+            context[context.length - 1].element :
+            this.editor.contentel.children[selection.focusOffset];
 
         if (topLevelTag.nodeName != nodetype) {
             const newNode = document.createElement(nodetype);
@@ -165,7 +167,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 topLevelTag.remove();
             }
 
-            range.setStart(newNode, 1);
+            range.setStart(newNode, 0);
             range.collapse(true);
 
             selection.removeAllRanges();
@@ -664,7 +666,11 @@ class LiliumText {
     storeRange() {
         const tempSelection = window.getSelection();
 
-        if (tempSelection.focusNode) {
+        if (tempSelection.type == "None" || !tempSelection.focusNode) {
+            const range = document.createRange();
+            range.setStart(this.contentel, 0);
+            this._tempRange = range;
+        } else {
             this._tempRange = tempSelection.getRangeAt(0).cloneRange();
         }
 
@@ -673,6 +679,7 @@ class LiliumText {
 
     restoreSelection() {
         const sel = window.getSelection();
+
         if (!this.focused) {
             sel.removeAllRanges();
             sel.addRange(this.getRange());
