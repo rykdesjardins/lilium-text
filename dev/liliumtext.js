@@ -217,7 +217,10 @@ class LiliumTextWebCommand extends LiliumTextCommand {
     }
 
     executeRemove() {
-        if (this.param) {
+        if (this.param == "a") {
+            this.editor.restoreSelection();
+            document.execCommand('unlink', false);
+        } else if (this.param) {
             const el = this.editor.restoreSelection().focusNode.parentElement;
             const context = this.editor.createSelectionContext(el);
 
