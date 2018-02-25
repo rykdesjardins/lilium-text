@@ -202,7 +202,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
             var context = this.editor.createSelectionContext(selection.focusNode);
             var blocktags = this.editor.settings.blockelements;
 
-            var topLevelTag = context[context.length - 1].element;
+            var topLevelTag = this.context ? context[context.length - 1].element : this.editor.contentel.children[selection.focusOffset];
 
             if (topLevelTag.nodeName != nodetype) {
                 var newNode = document.createElement(nodetype);
@@ -218,7 +218,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     topLevelTag.remove();
                 }
 
-                range.setStart(newNode, 1);
+                range.setStart(newNode, 0);
                 range.collapse(true);
 
                 selection.removeAllRanges();
@@ -255,17 +255,24 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
 
             var selection = this.editor.restoreSelection();
             var el = selection.focusNode;
-            var context = this.editor.createSelectionContext(el);
-            var topLevelEl = context[context.length - 1].element;
 
-            this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
+            if (el == this.editor.contentel) {
+                this.editor.contentel.insertBefore(newNode, this.editor.contentel.children[selection.focusOffset]);
+            } else {
+                var context = this.editor.createSelectionContext(el);
+                var topLevelEl = context[context.length - 1].element;
 
-            var range = selection.getRangeAt(0);
-            range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
-            range.collapse(true);
+                this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
-            selection.removeAllRanges();
-            selection.addRange(range);
+                if (selection.focusOffset == 0) {} else {
+                    var range = selection.getRangeAt(0);
+                    range.setStart(newNode.nextElementSibling || topLevelEl.nextElementSibling || newNode, 0);
+                    range.collapse(true);
+
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }
         }
     }, {
         key: "execute",
@@ -726,21 +733,34 @@ var LiliumText = function () {
             var context = this.createSelectionContext(selection.focusNode);
             var ctxElem = context[context.length - 1];
 
-            if (ctxElem && ctxElem.element.nextElementSibling) {
-                var curParag = ctxElem.element;
-                if (curParag) {
-                    curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
-                }
+            if (selection.focusNode == this.contentel) {
+                this.contentel.insertBefore(element, this.contentel.children[selection.focusOffset]);
+
+                var range = selection.getRangeAt(0).cloneRange();
+                range.setEndAfter(element);
+                range.collapse(false);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
             } else {
-                this.contentel.appendChild(element);
+                if (ctxElem && ctxElem.element.nextElementSibling) {
+                    var curParag = ctxElem.element;
+                    if (curParag) {
+                        curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
+                    }
+                } else {
+                    this.contentel.appendChild(element);
+                }
+
+                if (selection.focusOffset != 0) {
+                    var _range = selection.getRangeAt(0).cloneRange();
+                    _range.setEndAfter(element);
+                    _range.collapse(false);
+
+                    selection.removeAllRanges();
+                    selection.addRange(_range);
+                }
             }
-
-            var range = selection.getRangeAt(0).cloneRange();
-            range.setEndAfter(element);
-            range.collapse(false);
-
-            selection.removeAllRanges();
-            selection.addRange(range);
         }
     }, {
         key: "_focused",
@@ -804,7 +824,11 @@ var LiliumText = function () {
         value: function storeRange() {
             var tempSelection = window.getSelection();
 
-            if (tempSelection.focusNode) {
+            if (tempSelection.type == "None" || !tempSelection.focusNode) {
+                var range = document.createRange();
+                range.setStart(this.contentel, 0);
+                this._tempRange = range;
+            } else {
                 this._tempRange = tempSelection.getRangeAt(0).cloneRange();
             }
 
@@ -814,6 +838,7 @@ var LiliumText = function () {
         key: "restoreSelection",
         value: function restoreSelection() {
             var sel = window.getSelection();
+
             if (!this.focused) {
                 sel.removeAllRanges();
                 sel.addRange(this.getRange());
