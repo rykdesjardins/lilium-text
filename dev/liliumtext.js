@@ -45,15 +45,27 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             let maybeCtxElem = context.find(x => x.type == nodetype);
             if (maybeCtxElem) {
                 this.editor.log('Unwrapping element of node type ' + nodetype);
-                const el = maybeCtxElem.element;
-                this.editor.unwrap(el);
+                this.editor.unwrap(maybeCtxElem);
             }
         } else if (selection.type == "Range") {
+            /* 
+             * CONTEXT VARIABLES DEFINITION ------
+             *
+             * left, right : Nodes where selection starts and ends. Everything in between is located inside the fragment.
+             * leftCtx, rightCtx : Array containing nodes from the selected one up to the editor one
+             * leftExistWrap, rightExistWrap : Wrapped node if node already exists, otherwise undefined
+             *
+             * range : current selection range object
+             * frag : fragment containing everything from inside the selection. Not a copy; actual nodes. 
+             *
+             **/
+
+            const capNodeType = nodetype.toUpperCase();
             const [left, right] = selection.anchorNode.compareDocumentPosition(selection.focusNode) & Node.DOCUMENT_POSITION_FOLLOWING ? 
                 [selection.anchorNode, selection.focusNode] : [selection.focusNode, selection.anchorNode]; 
 
             const [leftCtx, rightCtx] = [this.editor.createSelectionContext(left), this.editor.createSelectionContext(right)];
-            const [leftExistWrap, rightExistWrap] = [leftCtx.find(x => x.type == nodetype), rightCtx.find(x => x.type == nodetype)];
+            let [leftExistWrap, rightExistWrap] = [leftCtx.find(x => x.nodeName == capNodeType), rightCtx.find(x => x.nodeName == capNodeType)];
             
             // Fun! :D
             this.editor.log("Long logic with range using node type " + nodetype);
@@ -66,7 +78,9 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 range.insertNode(frag.childNodes[0]);
             }
 
-            if (left.parentElement === right.parentElement && !leftExistWrap) {
+            let fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelector(nodetype);
+
+            if (left.parentElement === right.parentElement && !leftExistWrap && !fragWrap) {
                 this.editor.log("Quick range wrap with element of node type " + nodetype);
                 const newElem = document.createElement(nodetype);
                 newElem.appendChild(frag);
@@ -82,16 +96,35 @@ class LiliumTextWebCommand extends LiliumTextCommand {
 
                 // Extend existing wrapper
                 const wrapper = leftExistWrap || rightExistWrap;
-                Array.prototype.forEach.call(wrapper.element.querySelectorAll(nodetype), node => {
+                Array.prototype.forEach.call(wrapper.querySelectorAll(nodetype), node => {
                     this.editor.unwrap(node);
                 });
-            } else if (leftExistWrap && rightExistWrap && leftExistWrap.element === rightExistWrap.element) {
+            } else if (fragWrap) {
+                // There is an element inside the fragment with requested node name
+                // Unwrap child element
+                this.editor.log('Fragment child unwrap with node type ' + nodetype);
+                while (fragWrap) {
+                    const newFrag = document.createDocumentFragment();
+                    while (fragWrap.firstChild) {
+                        newFrag.appendChild(fragWrap.firstChild);
+                    }   
+    
+                    const target = fragWrap.parentElement || frag;
+                    target.insertBefore(newFrag, target.firstChild);
+                    fragWrap.remove();
+    
+                    fragWrap = frag.querySelector(nodetype);
+                }
+
+                const range = selection.getRangeAt(0)
+                range.insertNode(frag);
+            } else if (leftExistWrap && rightExistWrap && leftExistWrap === rightExistWrap) {
                 // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
                 this.editor.log("Placeholder unwrap from two sources with node types : " + nodetype);
                 const placeholder = document.createElement('liliumtext-placeholder');
                 selection.getRangeAt(0).insertNode(placeholder);
 
-                const leftEl = leftExistWrap.element;
+                const leftEl = leftExistWrap;
                 const clone = leftEl.cloneNode();
                 leftEl.parentElement.insertBefore(clone, leftEl);
 
@@ -120,7 +153,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
 
                 rightFrag.remove();
                 selection.getRangeAt(0).insertNode(frag);
-            } else if (frag.childNodes.length == 1) {
+            } else if (frag.childNodes.length == 1 && frag.childNodes[0].nodeName == nodetype) {
                 // Entire element is selected, Unwrap entire element
                 this.editor.log("Single unwrap of node type : " + nodetype);
                 const wrap = frag.childNodes[0];
@@ -132,7 +165,13 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 this.editor.log("Fragment wrap with node type : " + nodetype);
                 const newElem = document.createElement(nodetype);
                 newElem.appendChild(frag);
-                selection.getRangeAt(0).insertNode(newElem);
+
+                const range = selection.getRangeAt(0);
+                range.insertNode(newElem);
+                range.selectNode(newElem);
+
+                selection.removeAllRanges();
+                selection.addRange(range);
             }
         }
     }
@@ -150,7 +189,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         const blocktags = this.editor.settings.blockelements;
 
         const topLevelTag = context && context.length ?
-            context[context.length - 1].element :
+            context[context.length - 1] :
             this.editor.contentel.children[selection.focusOffset];
 
         if (topLevelTag.nodeName != nodetype) {
@@ -180,10 +219,11 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             const el = this.editor.restoreSelection().focusNode.parentElement;
             const context = this.editor.createSelectionContext(el);
 
-            const wrapperCtx = context.find(x => x.type == this.param);
+            const upperNode = this.param.toUpperCase();
+            const wrapperCtx = context.find(x => x.nodeName == upperNode);
             if (wrapperCtx) {
                 this.editor.log('Unwrapping node ' + this.param);
-                this.editor.unwrap(wrapperCtx.element);
+                this.editor.unwrap(wrapperCtx);
             }
         } else {
             this.editor.log('Executing native command removeFormat');
@@ -203,7 +243,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             this.editor.contentel.insertBefore(newNode, this.editor.contentel.children[selection.focusOffset]);
         } else {
             const context = this.editor.createSelectionContext(el);
-            const topLevelEl = context[context.length - 1].element;
+            const topLevelEl = context[context.length - 1];
             
             this.editor.contentel.insertBefore(newNode, topLevelEl.nextElementSibling);
 
@@ -472,7 +512,7 @@ class LiliumText {
         const context = [];
 
         while (elem != this.contentel && elem) {
-            context.push({ type : elem.nodeName.toLowerCase().replace('#', ''), element : elem });
+            context.push(elem);
             elem = elem.parentNode;
         }
 
@@ -590,7 +630,7 @@ class LiliumText {
             selection.removeAllRanges();
             selection.addRange(range);
         } else {
-            if (ctxElem && ctxElem.element.nextElementSibling) {
+            if (ctxElem && ctxElem.nextElementSibling) {
                 const curParag = ctxElem.element;
                 if (curParag) {
                     curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
