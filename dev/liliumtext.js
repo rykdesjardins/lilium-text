@@ -73,10 +73,12 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             const range = selection.getRangeAt(0);
             const frag = range.extractContents();
 
+            /*
             if (frag.childNodes[0].nodeName == "#text" && !frag.childNodes[0].data.trim()) {
                 this.editor.log("Removed extra empty text node from fragment");
                 range.insertNode(frag.childNodes[0]);
             }
+            */
 
             let fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelector(nodetype);
 
@@ -104,15 +106,21 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 // Unwrap child element
                 this.editor.log('Fragment child unwrap with node type ' + nodetype);
                 while (fragWrap) {
-                    const newFrag = document.createDocumentFragment();
-                    while (fragWrap.firstChild) {
-                        newFrag.appendChild(fragWrap.firstChild);
-                    }   
-    
-                    const target = fragWrap.parentElement || frag;
-                    target.insertBefore(newFrag, target.firstChild);
+                    if (fragWrap.parentNode) {
+                        while (fragWrap.firstChild) {
+                            fragWrap.parentNode.insertBefore(fragWrap.firstChild, fragWrap);
+                        }
+                    } else {
+                        const newFrag = document.createDocumentFragment();
+                        while (fragWrap.firstChild) {
+                            newFrag.appendChild(fragWrap.firstChild);
+                        }   
+        
+                        const target = fragWrap.Node || frag;
+                        target.insertBefore(newFrag, target.firstChild);
+                    }
+
                     fragWrap.remove();
-    
                     fragWrap = frag.querySelector(nodetype);
                 }
 
@@ -126,7 +134,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
 
                 const leftEl = leftExistWrap;
                 const clone = leftEl.cloneNode(true);
-                leftEl.parentElement.insertBefore(clone, leftEl);
+                leftEl.parentNode.insertBefore(clone, leftEl);
 
                 const clonePlaceholder = clone.querySelector('liliumtext-placeholder');
                 while (clonePlaceholder.nextSibling) {
@@ -137,7 +145,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                     placeholder.previousSibling.remove();
                 }
 
-                leftEl.parentElement.insertBefore(frag, leftEl);
+                leftEl.parentNode.insertBefore(frag, leftEl);
                 placeholder.remove();
                 clonePlaceholder.remove();
             } else if (leftExistWrap && rightExistWrap) {
@@ -221,7 +229,7 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             this.editor.restoreSelection();
             document.execCommand('unlink', false);
         } else if (this.param) {
-            const el = this.editor.restoreSelection().focusNode.parentElement;
+            const el = this.editor.restoreSelection().focusNode.parentNode;
             const context = this.editor.createSelectionContext(el);
 
             const upperNode = this.param.toUpperCase();
@@ -554,7 +562,7 @@ class LiliumText {
     }
 
     unwrap(el) {
-        const par = el.parentElement;
+        const par = el.parentNode;
         while(el.firstChild) {
             par.insertBefore(el.firstChild, el);
         }
@@ -635,10 +643,10 @@ class LiliumText {
             selection.removeAllRanges();
             selection.addRange(range);
         } else {
-            if (ctxElem && ctxElem.nextElementSibling) {
+            if (ctxElem && ctxElem.nextSibling) {
                 const curParag = ctxElem;
                 if (curParag) {
-                    curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
+                    curParag.parentNode.insertBefore(element, curParag.nextSibling);
                 }    
             } else {
                 this.contentel.appendChild(element);
