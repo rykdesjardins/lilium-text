@@ -65,14 +65,13 @@
   height: 26px;
   cursor: pointer;
   color: #333;
-  transition: all 0.1s;
 }
 .liliumtext.theme-minim .liliumtext-topbar-command.liliumtext-command-withtext {
   width: auto;
   padding: 6px 6px 0px;
 }
 .liliumtext.theme-minim .liliumtext-topbar-command:hover {
-  transform: scale(1.1);
+  background: #F6F6F6;
 }
 .liliumtext.theme-minim .liliumtext-command-text {
   display: inline-block;

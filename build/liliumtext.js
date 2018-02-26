@@ -125,10 +125,12 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                 var range = selection.getRangeAt(0);
                 var frag = range.extractContents();
 
+                /*
                 if (frag.childNodes[0].nodeName == "#text" && !frag.childNodes[0].data.trim()) {
                     this.editor.log("Removed extra empty text node from fragment");
                     range.insertNode(frag.childNodes[0]);
                 }
+                */
 
                 var fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelector(nodetype);
 
@@ -156,15 +158,21 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     // Unwrap child element
                     this.editor.log('Fragment child unwrap with node type ' + nodetype);
                     while (fragWrap) {
-                        var newFrag = document.createDocumentFragment();
-                        while (fragWrap.firstChild) {
-                            newFrag.appendChild(fragWrap.firstChild);
+                        if (fragWrap.parentNode) {
+                            while (fragWrap.firstChild) {
+                                fragWrap.parentNode.insertBefore(fragWrap.firstChild, fragWrap);
+                            }
+                        } else {
+                            var newFrag = document.createDocumentFragment();
+                            while (fragWrap.firstChild) {
+                                newFrag.appendChild(fragWrap.firstChild);
+                            }
+
+                            var target = fragWrap.Node || frag;
+                            target.insertBefore(newFrag, target.firstChild);
                         }
 
-                        var target = fragWrap.parentElement || frag;
-                        target.insertBefore(newFrag, target.firstChild);
                         fragWrap.remove();
-
                         fragWrap = frag.querySelector(nodetype);
                     }
 
@@ -178,7 +186,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
 
                     var leftEl = leftExistWrap;
                     var clone = leftEl.cloneNode(true);
-                    leftEl.parentElement.insertBefore(clone, leftEl);
+                    leftEl.parentNode.insertBefore(clone, leftEl);
 
                     var clonePlaceholder = clone.querySelector('liliumtext-placeholder');
                     while (clonePlaceholder.nextSibling) {
@@ -189,7 +197,7 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                         placeholder.previousSibling.remove();
                     }
 
-                    leftEl.parentElement.insertBefore(frag, leftEl);
+                    leftEl.parentNode.insertBefore(frag, leftEl);
                     placeholder.remove();
                     clonePlaceholder.remove();
                 } else if (leftExistWrap && rightExistWrap) {
@@ -270,8 +278,11 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
     }, {
         key: "executeRemove",
         value: function executeRemove() {
-            if (this.param) {
-                var el = this.editor.restoreSelection().focusNode.parentElement;
+            if (this.param == "a") {
+                this.editor.restoreSelection();
+                document.execCommand('unlink', false);
+            } else if (this.param) {
+                var el = this.editor.restoreSelection().focusNode.parentNode;
                 var context = this.editor.createSelectionContext(el);
 
                 var upperNode = this.param.toUpperCase();
@@ -688,7 +699,7 @@ var LiliumText = function () {
     }, {
         key: "unwrap",
         value: function unwrap(el) {
-            var par = el.parentElement;
+            var par = el.parentNode;
             while (el.firstChild) {
                 par.insertBefore(el.firstChild, el);
             }
@@ -784,10 +795,10 @@ var LiliumText = function () {
                 selection.removeAllRanges();
                 selection.addRange(range);
             } else {
-                if (ctxElem && ctxElem.nextElementSibling) {
+                if (ctxElem && ctxElem.nextSibling) {
                     var curParag = ctxElem;
                     if (curParag) {
-                        curParag.parentElement.insertBefore(element, curParag.nextElementSibling);
+                        curParag.parentNode.insertBefore(element, curParag.nextSibling);
                     }
                 } else {
                     this.contentel.appendChild(element);
