@@ -675,9 +675,14 @@ class LiliumText {
 
     _clicked(event) {
         const selection = window.getSelection();
-        const context = this.createSelectionContext(selection.focusNode);
-        const element = selection.focusNode.parentElement;
-        this.fire('clicked', { context, event, selection, element });
+
+        if (selection.focusNode && selection.focusNode.parentElement) {
+            const context = this.createSelectionContext(selection.focusNode);
+            const element = selection.focusNode.parentElement;
+            this.fire('clicked', { context, event, selection, element });
+        } else {
+            this.fire('clicked', { selection, event });
+        }
     }
 
     redo() {
