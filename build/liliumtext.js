@@ -829,9 +829,14 @@ var LiliumText = function () {
         key: "_clicked",
         value: function _clicked(event) {
             var selection = window.getSelection();
-            var context = this.createSelectionContext(selection.focusNode);
-            var element = selection.focusNode.parentElement;
-            this.fire('clicked', { context: context, event: event, selection: selection, element: element });
+
+            if (selection.focusNode && selection.focusNode.parentElement) {
+                var context = this.createSelectionContext(selection.focusNode);
+                var element = selection.focusNode.parentElement;
+                this.fire('clicked', { context: context, event: event, selection: selection, element: element });
+            } else {
+                this.fire('clicked', { selection: selection, event: event });
+            }
         }
     }, {
         key: "redo",
@@ -924,7 +929,7 @@ var LiliumText = function () {
         key: "_pasted",
         value: function _pasted(e) {
             var data = e.clipboardData || window.clipboardData;
-            var eventresult = this.fire('paste', data);
+            var eventresult = this.fire('paste', { dataTransfer: data, event: e });
 
             if (eventresult && eventresult.includes(false)) {
                 return;

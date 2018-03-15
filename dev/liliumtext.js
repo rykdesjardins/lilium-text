@@ -767,7 +767,7 @@ class LiliumText {
 
     _pasted(e) {
         const data = e.clipboardData || window.clipboardData;
-        const eventresult = this.fire('paste', data);
+        const eventresult = this.fire('paste', { dataTransfer : data, event : e });
         
         if (eventresult && eventresult.includes(false)) {
             return;

@@ -1,7 +1,7 @@
 {
   "name": "lilium-text",
-  "version": "0.1.7",
-  "description": "Web rich text editor. Not ready to be used at all.",
+  "version": "0.2.0",
+  "description": "Web rich text editor. Ready to be used in a test environment.",
   "main": "build/liliumtext.js",
   "scripts": {
     "build": "lessc dev/minim.less build/minim.css && uglifycss build/minim.css > build/minim.min.css && babel dev/liliumtext.js -o build/liliumtext.js",

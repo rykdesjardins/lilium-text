@@ -107,7 +107,7 @@ editor.bind('code', (editor, isCodeView) => {
 | destroy    | The editor object was released               |                                       |
 | history    | A state was pushed to history stack          | Entry `LiliumTextHistoryEntry`        |
 | focus      | The text portion of the editor was focused   |                                       |
-| paste      | The user pasted content into the editor      | Object `DataTransfer`                 |
+| paste      | The user pasted content into the editor      | Object : `{ dataTransfer, event }`    |
 | code       | Toggle between text view and html view       | Boolean, true if code view            |
 | willrender | Editor is about to render                    |                                       |
 | render     | Editor rendered                              |                                       |
@@ -119,8 +119,8 @@ editor.bind('code', (editor, isCodeView) => {
 
 Some events will carry arguments as detailed in the "Args" column. When defining a callback, it is important to remember that the first argument is **always** the editor firing the event. If event arguments exist, they will appear as the second argument of the callback. 
 ```javascript
-editor.bind('someEvent', (thatEvent, eventArgs) => {
-    editor === thatEvent // true
+editor.bind('someEvent', (thatEditor, eventArgs) => {
+    editor === thatEditor // true
 });
 ```
 
@@ -138,6 +138,21 @@ const editor3 = new LiliumText('myeditor3', { hooks : { init }});
 //  > Initialized editor with id myeditor1 
 //  > Initialized editor with id myeditor2
 //  > Initialized editor with id myeditor3
+```
+
+### The paste event
+Since older browsers do not handle the paste event the same way, the original event is passed as well as the `dataTransfer` object fetched from either the event itself, or `window`.
+It is possible to cancel the original paste event and do something else by returning `false`, and calling `event.preventDefault()` like so : 
+```javascript
+editor.bind('paste', (thatEditor, pasteArgs) => {
+    // Will prevent the browser from pasting the text
+    pasteArgs.preventDefault();
+
+    /* Execute your logic */
+
+    // Will prevent LiliumText from executing its paste logic
+    return false;
+});
 ```
 
 ## Adding commands
