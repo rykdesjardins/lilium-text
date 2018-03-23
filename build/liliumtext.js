@@ -798,7 +798,7 @@ var LiliumText = function () {
                 if (ctxElem && ctxElem.nextSibling) {
                     var curParag = ctxElem;
                     if (curParag) {
-                        curParag.parentNode.insertBefore(element, curParag.nextSibling);
+                        curParag.parentNode.insertBefore(element, selection.focusOffset == 0 ? curParag : curParag.nextSibling);
                     }
                 } else {
                     this.contentel.appendChild(element);
@@ -836,6 +836,20 @@ var LiliumText = function () {
                 this.fire('clicked', { context: context, event: event, selection: selection, element: element });
             } else {
                 this.fire('clicked', { selection: selection, event: event });
+            }
+
+            if (event.target == this.contentel && this.contentel.offsetHeight - event.offsetY < 60 && editor.contentel.scrollHeight - this.contentel.getBoundingClientRect().height - this.contentel.scrollTop < 30) {
+                var newParag = document.createElement(this.settings.breaktag);
+                newParag.appendChild(document.createElement('br'));
+                this.contentel.appendChild(newParag);
+
+                var range = document.createRange();
+                range.selectNode(newParag);
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                this.contentel.scrollTop = editor.contentel.scrollHeight - this.contentel.getBoundingClientRect().height;
             }
         }
     }, {
