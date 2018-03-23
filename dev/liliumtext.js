@@ -646,7 +646,7 @@ class LiliumText {
             if (ctxElem && ctxElem.nextSibling) {
                 const curParag = ctxElem;
                 if (curParag) {
-                    curParag.parentNode.insertBefore(element, curParag.nextSibling);
+                    curParag.parentNode.insertBefore(element, selection.focusOffset == 0 ? curParag : curParag.nextSibling);
                 }    
             } else {
                 this.contentel.appendChild(element);
