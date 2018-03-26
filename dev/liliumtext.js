@@ -15,10 +15,21 @@ class LiliumTextCommand {
             el.appendChild(txt);
         }
 
-        el.addEventListener('click', (ev) => { 
+        el.addEventListener('mousedown', ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            return false;
+        });
+
+        el.addEventListener('mouseup', (ev) => { 
+            ev.preventDefault();
+            ev.stopPropagation();
+
             editor.log('Executed command ' + this.webName + (this.param ? (" with parameter '" + this.param + "'") : ''));
             editor.fire('command', this.webName);
             this.execute(ev, this, editor); 
+
+            return false;
         });
 
         return el;
