@@ -41,10 +41,21 @@ var LiliumTextCommand = function () {
                 el.appendChild(txt);
             }
 
-            el.addEventListener('click', function (ev) {
+            el.addEventListener('mousedown', function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                return false;
+            });
+
+            el.addEventListener('mouseup', function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+
                 editor.log('Executed command ' + _this.webName + (_this.param ? " with parameter '" + _this.param + "'" : ''));
                 editor.fire('command', _this.webName);
                 _this.execute(ev, _this, editor);
+
+                return false;
             });
 
             return el;
@@ -71,6 +82,19 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
     }
 
     _createClass(LiliumTextWebCommand, [{
+        key: "highlightNode",
+        value: function highlightNode(node) {
+            var selection = this.editor.restoreSelection();
+            var range = document.createRange();
+
+            this.editor.log("Highlighting node " + node.nodeName + " from Web Command");
+            range.selectNode(node);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            this.editor.storeRange(range);
+        }
+    }, {
         key: "executeText",
         value: function executeText() {
             var _this3 = this;
@@ -139,6 +163,8 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     var newElem = document.createElement(nodetype);
                     newElem.appendChild(frag);
                     selection.getRangeAt(0).insertNode(newElem);
+
+                    this.highlightNode(newElem);
                 } else if (!leftExistWrap != !rightExistWrap) {
                     // Apparently there is no XOR in Javascript, so here's a syntax monstrosity
                     // This will not execute the block unless one is truthy and one is falsey
@@ -892,15 +918,19 @@ var LiliumText = function () {
         }
     }, {
         key: "storeRange",
-        value: function storeRange() {
-            var tempSelection = window.getSelection();
-
-            if (tempSelection.type == "None" || !tempSelection.focusNode) {
-                var range = document.createRange();
-                range.setStart(this.contentel, 0);
-                this._tempRange = range;
+        value: function storeRange(maybeRange) {
+            if (maybeRange) {
+                this._tempRange = maybeRange;
             } else {
-                this._tempRange = tempSelection.getRangeAt(0).cloneRange();
+                var tempSelection = window.getSelection();
+
+                if (tempSelection.type == "None" || !tempSelection.focusNode) {
+                    var range = document.createRange();
+                    range.setStart(this.contentel, 0);
+                    this._tempRange = range;
+                } else {
+                    this._tempRange = tempSelection.getRangeAt(0).cloneRange();
+                }
             }
 
             return this._tempRange;
