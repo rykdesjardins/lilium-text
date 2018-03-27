@@ -47,6 +47,18 @@ class LiliumTextWebCommand extends LiliumTextCommand {
         this.text = text;
     }
 
+    highlightNode(node) {
+        const selection = this.editor.restoreSelection();
+        const range = document.createRange();
+
+        this.editor.log("Highlighting node " + node.nodeName + " from Web Command");
+        range.selectNode(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        this.editor.storeRange(range);
+    }
+
     executeText() {
         const selection = this.editor.restoreSelection();
         const nodetype = this.param;
@@ -98,6 +110,8 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 const newElem = document.createElement(nodetype);
                 newElem.appendChild(frag);
                 selection.getRangeAt(0).insertNode(newElem);
+
+                this.highlightNode(newElem);
             } else if (!leftExistWrap != !rightExistWrap) {
                 // Apparently there is no XOR in Javascript, so here's a syntax monstrosity
                 // This will not execute the block unless one is truthy and one is falsey
@@ -749,15 +763,19 @@ class LiliumText {
         return false;
     }
 
-    storeRange() {
-        const tempSelection = window.getSelection();
-
-        if (tempSelection.type == "None" || !tempSelection.focusNode) {
-            const range = document.createRange();
-            range.setStart(this.contentel, 0);
-            this._tempRange = range;
+    storeRange(maybeRange) {
+        if (maybeRange) {
+            this._tempRange = maybeRange;
         } else {
-            this._tempRange = tempSelection.getRangeAt(0).cloneRange();
+            const tempSelection = window.getSelection();
+
+            if (tempSelection.type == "None" || !tempSelection.focusNode) {
+                const range = document.createRange();
+                range.setStart(this.contentel, 0);
+                this._tempRange = range;
+            } else {
+                this._tempRange = tempSelection.getRangeAt(0).cloneRange();
+            }
         }
 
         return this._tempRange;
