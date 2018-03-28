@@ -103,10 +103,12 @@ class LiliumTextWebCommand extends LiliumTextCommand {
             }
             */
 
-            let fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelector(nodetype);
+            let fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelectorAll(nodetype);
 
-            if (left.parentElement === right.parentElement && !leftExistWrap && !fragWrap) {
+            if (left.parentElement === right.parentElement && !leftExistWrap && !fragWrap.length) {
                 this.editor.log("Quick range wrap with element of node type " + nodetype);
+
+                // Might be worth looking at Range.surroundContents()
                 const newElem = document.createElement(nodetype);
                 newElem.appendChild(frag);
                 selection.getRangeAt(0).insertNode(newElem);
@@ -126,31 +128,23 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 Array.prototype.forEach.call(wrapper.querySelectorAll(nodetype), node => {
                     this.editor.unwrap(node);
                 });
-            } else if (fragWrap) {
+
+                this.highlightNode(node);
+            } else if (fragWrap.length != 0) {
                 // There is an element inside the fragment with requested node name
                 // Unwrap child element
                 this.editor.log('Fragment child unwrap with node type ' + nodetype);
-                while (fragWrap) {
-                    if (fragWrap.parentNode) {
-                        while (fragWrap.firstChild) {
-                            fragWrap.parentNode.insertBefore(fragWrap.firstChild, fragWrap);
-                        }
-                    } else {
-                        const newFrag = document.createDocumentFragment();
-                        while (fragWrap.firstChild) {
-                            newFrag.appendChild(fragWrap.firstChild);
-                        }   
-        
-                        const target = fragWrap.Node || frag;
-                        target.insertBefore(newFrag, target.firstChild);
+                Array.prototype.forEach.call(fragWrap, elem => {
+                    while (elem.firstChild) {
+                        elem.parentNode ? 
+                            elem.parentNode.insertBefore(elem.firstChild, elem) :
+                            frag.insertBefore(elem.firstChild, frag);
                     }
+                });
 
-                    fragWrap.remove();
-                    fragWrap = frag.querySelector(nodetype);
-                }
+                Array.prototype.forEach.call(fragWrap, elem => elem && elem.remove && elem.remove());
 
-                const range = selection.getRangeAt(0)
-                range.insertNode(frag);
+                selection.getRangeAt(0).insertNode(frag);
             } else if (leftExistWrap && rightExistWrap && leftExistWrap === rightExistWrap) {
                 // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
                 this.editor.log("Placeholder unwrap from two sources with node types : " + nodetype);
@@ -173,6 +167,8 @@ class LiliumTextWebCommand extends LiliumTextCommand {
                 leftEl.parentNode.insertBefore(frag, leftEl);
                 placeholder.remove();
                 clonePlaceholder.remove();
+
+                this.highlightNode(clone);
             } else if (leftExistWrap && rightExistWrap) {
                 this.editor.log("Merge wrap from two sources with node types : " + nodetype);
                 // Merge wrap

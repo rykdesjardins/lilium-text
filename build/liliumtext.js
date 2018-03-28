@@ -156,10 +156,12 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                 }
                 */
 
-                var fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelector(nodetype);
+                var fragWrap = !leftExistWrap && !rightExistWrap && frag.querySelectorAll(nodetype);
 
-                if (left.parentElement === right.parentElement && !leftExistWrap && !fragWrap) {
+                if (left.parentElement === right.parentElement && !leftExistWrap && !fragWrap.length) {
                     this.editor.log("Quick range wrap with element of node type " + nodetype);
+
+                    // Might be worth looking at Range.surroundContents()
                     var newElem = document.createElement(nodetype);
                     newElem.appendChild(frag);
                     selection.getRangeAt(0).insertNode(newElem);
@@ -179,31 +181,23 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     Array.prototype.forEach.call(wrapper.querySelectorAll(nodetype), function (node) {
                         _this3.editor.unwrap(node);
                     });
-                } else if (fragWrap) {
+
+                    this.highlightNode(node);
+                } else if (fragWrap.length != 0) {
                     // There is an element inside the fragment with requested node name
                     // Unwrap child element
                     this.editor.log('Fragment child unwrap with node type ' + nodetype);
-                    while (fragWrap) {
-                        if (fragWrap.parentNode) {
-                            while (fragWrap.firstChild) {
-                                fragWrap.parentNode.insertBefore(fragWrap.firstChild, fragWrap);
-                            }
-                        } else {
-                            var newFrag = document.createDocumentFragment();
-                            while (fragWrap.firstChild) {
-                                newFrag.appendChild(fragWrap.firstChild);
-                            }
-
-                            var target = fragWrap.Node || frag;
-                            target.insertBefore(newFrag, target.firstChild);
+                    Array.prototype.forEach.call(fragWrap, function (elem) {
+                        while (elem.firstChild) {
+                            elem.parentNode ? elem.parentNode.insertBefore(elem.firstChild, elem) : frag.insertBefore(elem.firstChild, frag);
                         }
+                    });
 
-                        fragWrap.remove();
-                        fragWrap = frag.querySelector(nodetype);
-                    }
+                    Array.prototype.forEach.call(fragWrap, function (elem) {
+                        return elem && elem.remove && elem.remove();
+                    });
 
-                    var _range = selection.getRangeAt(0);
-                    _range.insertNode(frag);
+                    selection.getRangeAt(0).insertNode(frag);
                 } else if (leftExistWrap && rightExistWrap && leftExistWrap === rightExistWrap) {
                     // Unwrap both ends, possible solution : while (textnode has next sibling) { insert sibling after wrapper node }
                     this.editor.log("Placeholder unwrap from two sources with node types : " + nodetype);
@@ -226,6 +220,8 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     leftEl.parentNode.insertBefore(frag, leftEl);
                     placeholder.remove();
                     clonePlaceholder.remove();
+
+                    this.highlightNode(clone);
                 } else if (leftExistWrap && rightExistWrap) {
                     this.editor.log("Merge wrap from two sources with node types : " + nodetype);
                     // Merge wrap
@@ -254,12 +250,12 @@ var LiliumTextWebCommand = function (_LiliumTextCommand) {
                     var _newElem2 = document.createElement(nodetype);
                     _newElem2.appendChild(frag);
 
-                    var _range2 = selection.getRangeAt(0);
-                    _range2.insertNode(_newElem2);
-                    _range2.selectNode(_newElem2);
+                    var _range = selection.getRangeAt(0);
+                    _range.insertNode(_newElem2);
+                    _range.selectNode(_newElem2);
 
                     selection.removeAllRanges();
-                    selection.addRange(_range2);
+                    selection.addRange(_range);
                 }
             }
         }
@@ -831,12 +827,12 @@ var LiliumText = function () {
                 }
 
                 if (selection.focusOffset != 0) {
-                    var _range3 = selection.getRangeAt(0).cloneRange();
-                    _range3.setEndAfter(element);
-                    _range3.collapse(false);
+                    var _range2 = selection.getRangeAt(0).cloneRange();
+                    _range2.setEndAfter(element);
+                    _range2.collapse(false);
 
                     selection.removeAllRanges();
-                    selection.addRange(_range3);
+                    selection.addRange(_range2);
                 }
             }
         }
