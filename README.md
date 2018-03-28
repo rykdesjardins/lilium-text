@@ -1,5 +1,5 @@
 # Lilium Text
-A lightweight, dependency-free, extensible text editor. [TRY IT HERE](https://erikdesjardins.com/experiments/lilium-text/dev/test.html).
+A *24kb*, dependency-free, extensible text editor. [TRY IT HERE](https://erikdesjardins.com/experiments/lilium-text/dev/test.html).
 
 ![First Screenshot](https://raw.githubusercontent.com/rykdesjardins/lilium-text/master/assets/screenshot.png)
 
