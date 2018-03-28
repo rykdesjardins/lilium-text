@@ -1,10 +1,10 @@
 {
   "name": "lilium-text",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Web rich text editor. Ready to be used in a test environment.",
-  "main": "build/liliumtext.js.min",
+  "main": "build/liliumtext.min.js",
   "scripts": {
-    "build": "lessc dev/minim.less build/minim.css && uglifycss build/minim.css > build/minim.min.css && babel dev/liliumtext.js -o build/liliumtext.js && uglifyjs --compress --mangle --output build/liliumtext.js.min -- build/liliumtext.js",
+    "build": "lessc dev/minim.less build/minim.css && uglifycss build/minim.css > build/minim.min.css && babel dev/liliumtext.js -o build/liliumtext.js && uglifyjs --compress --mangle --output build/liliumtext.min.js -- build/liliumtext.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
