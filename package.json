@@ -11,8 +11,9 @@
     "type": "git",
     "url": "git+https://github.com/rykdesjardins/lilium-text.git"
   },
-  "author": "",
+  "author": "Erik Desjardins",
   "license": "ISC",
+  "keywords" : ["text", "editor", "javascript", "no-dependencies", "lightweight", "text-editor", "es6", "javascript-library", "lilium", "narcity"],
   "bugs": {
     "url": "https://github.com/rykdesjardins/lilium-text/issues"
   },
