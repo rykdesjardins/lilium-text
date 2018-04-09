@@ -1,6 +1,6 @@
 {
   "name": "lilium-text",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Web rich text editor. Ready to be used in a test environment.",
   "main": "build/liliumtext.min.js",
   "scripts": {
@@ -11,8 +11,9 @@
     "type": "git",
     "url": "git+https://github.com/rykdesjardins/lilium-text.git"
   },
-  "author": "",
+  "author": "Erik Desjardins",
   "license": "ISC",
+  "keywords" : ["text", "editor", "javascript", "no-dependencies", "lightweight", "text-editor", "es6", "javascript-library", "lilium", "narcity"],
   "bugs": {
     "url": "https://github.com/rykdesjardins/lilium-text/issues"
   },
