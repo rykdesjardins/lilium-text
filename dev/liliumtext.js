@@ -48,6 +48,7 @@ class LiliumTextBrowserCompat {
                 return "bold";
 
             case "italic":
+            case "i":
             case "em":
                 return "italic";
 
