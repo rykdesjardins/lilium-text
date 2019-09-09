@@ -1,31 +1,37 @@
 {
   "name": "lilium-text",
-  "version": "1.3.2",
-  "description": "Web rich text editor. Ready to be used in a test environment.",
-  "main": "build/liliumtext.min.js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "build": "lessc dev/minim.less build/minim.css && uglifycss build/minim.css > build/minim.min.css && babel dev/liliumtext.js -o build/liliumtext.js && uglifyjs --compress --mangle --output build/liliumtext.min.js -- build/liliumtext.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node devserver.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rykdesjardins/lilium-text.git"
-  },
-  "author": "Erik Desjardins",
+  "author": "",
   "license": "ISC",
-  "keywords" : ["text", "editor", "javascript", "no-dependencies", "lightweight", "text-editor", "es6", "javascript-library", "lilium", "narcity"],
-  "bugs": {
-    "url": "https://github.com/rykdesjardins/lilium-text/issues"
-  },
-  "homepage": "https://github.com/rykdesjardins/lilium-text#readme",
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-minify": "^0.3.0",
-    "express": "^4.16.2",
-    "less": "^3.0.0",
-    "uglify-js": "^3.3.16",
-    "uglifycss": "0.0.27"
+  "dependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-transform-runtime": "latest",
+    "@babel/preset-env": "^7.1.6",
+    "@babel/runtime": "latest",
+    "@google/maps": "^0.5.5",
+    "@sendgrid/mail": "^6.3.1",
+    "babel-cli": "latest",
+    "babel-loader": "^8.0.4",
+    "babel-minify-webpack-plugin": "latest",
+    "babel-plugin-styled-components": "^1.10.6",
+    "babel-plugin-transform-class-properties": "latest",
+    "babel-plugin-transform-object-rest-spread": "latest",
+    "babel-plugin-transform-react-jsx": "latest",
+    "babel-preset-env": "latest",
+    "babel-preset-preact": "latest",
+    "less": "^3.10.3",
+    "less-loader": "^5.0.0",
+    "open": "^6.4.0",
+    "preact": "^8.5.2",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.8",
+    "webpack-dev-server": "^3.8.0"
   }
 }
