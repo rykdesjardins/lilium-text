@@ -3,8 +3,8 @@ import { Component, h } from 'preact';
 export class LiliumTextBlock extends Component {
     render() {
         return (
-            <div contenteditable="true" >
-                
+            <div contenteditable="true">
+
             </div>
         );
     }

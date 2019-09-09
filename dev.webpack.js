@@ -12,7 +12,7 @@ const buildconfig = {
                     loader : "babel-loader?cacheDirectory=true", 
                     options : { 
                         "plugins": [
-                            ["transform-react-jsx", { "pragma":"h" }], 
+                            ["@babel/transform-react-jsx", { "pragma":"h" }], 
                             ["transform-class-properties"],
                             ["@babel/plugin-proposal-object-rest-spread", {
                                 useBuildIns : true

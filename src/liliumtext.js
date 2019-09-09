@@ -7,7 +7,8 @@ export class LiliumText extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            dev : props.dev
+            dev : props.dev,
+            markup : props.markup || ""
         };
     }
 
@@ -19,7 +20,7 @@ export class LiliumText extends Component {
         return (
             <div class="lilium-text">
                 <LiliumTextToolBar />
-                <LiliumTextEditor />
+                <LiliumTextEditor markup={this.state.markup} />
                 <LiliumTextStatusBar />
             </div>
         );
